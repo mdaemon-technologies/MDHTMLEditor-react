@@ -1,7 +1,15 @@
 {
   "name": "@mdaemon/html-editor-react",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "React wrapper for MDHTMLEditor",
+  "homepage": "https://github.com/mdaemon-technologies/MDHTMLEditor-react",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mdaemon-technologies/MDHTMLEditor-react.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mdaemon-technologies/MDHTMLEditor-react/issues"
+  },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -19,8 +27,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "vite build",
-    "dev": "vite build --watch",
+    "build": "vite build --mode production",
+    "build:dev": "vite build --mode development",
+    "dev": "vite build --watch --mode development",
     "demo": "vite serve --config vite.demo.config.ts",
     "test": "jest",
     "test:coverage": "jest --coverage",
@@ -47,7 +56,7 @@
     "@tiptap/react": "^3.19.0"
   },
   "devDependencies": {
-    "@mdaemon/html-editor": "^1.0.6",
+    "@mdaemon/html-editor": "^1.0.8",
     "@swc/core": "^1.11.0",
     "@swc/jest": "^0.2.39",
     "@testing-library/jest-dom": "^6.9.1",
