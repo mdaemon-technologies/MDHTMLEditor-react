@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     dts({
-      insertTypesEntry: true,
+      tsconfigPath: resolve(__dirname, 'tsconfig.build.json'),
       rollupTypes: true,
     }),
   ],
