@@ -214,15 +214,24 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `basicEditor` | `boolean` | `false` | Use a simplified toolbar (no images, tables, code blocks). |
+| `readonly` | `boolean` | `false` | Start the editor in read-only mode. Toggle at runtime via `getEditor()?.setReadOnly()`. |
 | `height` | `string \| number` | `300` | Editor height. |
+| `min_height` | `string \| number` | &mdash; | Minimum editor height. |
+| `max_height` | `string \| number` | &mdash; | Maximum editor height. |
 | `language` | `string` | `'en'` | UI language code. 31 languages built in. |
-| `skin` | `'oxide' \| 'oxide-dark'` | `'oxide'` | Toolbar and dialog theme. |
-| `content_css` | `'default' \| 'dark'` | `'default'` | Content area theme. |
+| `skin` | `'oxide' \| 'oxide-dark' \| 'confab' \| 'confab-dark'` | `'oxide'` | Toolbar and dialog theme. |
+| `content_css` | `'default' \| 'dark' \| 'confab' \| 'confab-dark'` | `'default'` | Content area theme. |
 | `content_style` | `string` | &mdash; | Custom CSS injected into the editing surface. |
 | `fontName` | `string` | &mdash; | Default font family. |
 | `fontSize` | `string` | &mdash; | Default font size. |
 | `font_family_formats` | `string` | *(TinyMCE defaults)* | Semicolon-delimited font list (`Name=family,...`). |
 | `font_size_formats` | `string` | `'8pt 9pt 10pt 12pt 14pt 18pt 24pt 36pt'` | Space-delimited size options. |
+| `font_names` | `string` | &mdash; | CKEditor alias for `font_family_formats`. |
+| `fontSize_sizes` | `string` | &mdash; | CKEditor alias for `font_size_formats`. |
+| `block_formats` | `string` | *(Paragraph + H1&ndash;H6)* | Block-format dropdown definitions for the `blocks` button (`Name=tag;...`). |
+| `style_formats` | `StyleFormat[]` | *(subset)* | Named styles for the `styles` dropdown (CKEditor `stylesSet`-compatible). |
+| `forced_root_block` | `'p' \| 'div'` | `'p'` | Block element produced on Enter. `'div'` gives CKEditor `ENTER_DIV` parity. |
+| `trailingNode` | `boolean` | `false` | Append an empty trailing paragraph after a block node (table, image, code block) so the cursor can sit after it. |
 | `directionality` | `'ltr' \| 'rtl'` | `'ltr'` | Text direction. |
 | `toolbar` | `string` | *(preset)* | Custom toolbar layout string. |
 | `toolbar_mode` | `'sliding' \| 'floating' \| 'wrap'` | `'wrap'` | Toolbar overflow behavior. |
@@ -230,6 +239,10 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `auto_focus` | `string` | &mdash; | Auto-focus on init. |
 | `browser_spellcheck` | `boolean` | `true` | Enable browser spell check. |
 | `entity_encoding` | `'raw' \| 'named' \| 'numeric'` | `'raw'` | HTML entity encoding mode. |
+| `paste_from_office` | `boolean` | `true` | Clean and preserve formatting when pasting from Microsoft Word/Excel. |
+| `speech_to_text` | `boolean` | `true` | Enable the `speechtotext` and `dictate` toolbar buttons (requires the Web Speech API). |
+| `convert_unsafe_embeds` | `boolean` | `true` | Sanitize embedded content. |
+| `format_empty_lines` | `boolean` | `true` | Format empty lines. |
 | `includeTemplates` | `boolean` | `false` | Show the template dropdown. |
 | `templates` | `Template[]` | `[]` | Predefined HTML templates. |
 | `dropbox` | `boolean` | `false` | Enable Dropbox integration. |
@@ -238,6 +251,9 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `images_upload_base_path` | `string` | `'/'` | Prefix for uploaded image URLs. |
 | `images_upload_max_size` | `number` | `10485760` | Max upload size in bytes (10 MB). |
 | `images_upload_headers` | `Record<string, string>` | &mdash; | Extra headers for upload requests. |
+| `images_file_types` | `string` | *(permissive)* | Comma/space-separated accepted extensions (e.g. `'jpg,jpeg,png,gif'`). |
+| `images_upload_validate` | `(file: File) => string \| null` | &mdash; | Pre-upload hook; return a message to reject the file, or `null` to allow. |
+| `images_upload_error` | `(message: string) => void` | &mdash; | Caller-supplied alert for drag-drop/paste upload rejections and failures. |
 | `setup` | `(editor) => void` | &mdash; | Pre-init callback for registering custom toolbar buttons. |
 
 ### Dark Theme
@@ -251,6 +267,19 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 />
 ```
 
+### Confab Skin
+
+The `confab` / `confab-dark` skins integrate with the WorldClient theming system, pulling colors from the host application's CSS custom properties so the editor adapts when the app theme changes:
+
+```tsx
+<Editor
+  config={{
+    skin: 'confab-dark',
+    content_css: 'confab-dark',
+  }}
+/>
+```
+
 ### Custom Content Styles
 
 ```tsx
@@ -260,6 +289,20 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
   }}
 />
 ```
+
+### Read-Only Mode
+
+Start the editor read-only with `readonly: true`, or toggle it at runtime through the underlying editor instance:
+
+```tsx
+<Editor config={{ readonly: true }} ref={editorRef} />
+
+// Toggle later
+editorRef.current?.getEditor()?.setReadOnly(false);
+const isReadOnly = editorRef.current?.getEditor()?.isReadOnly();
+```
+
+> The `disabled` prop applies a lightweight visual lock (pointer-events off, reduced opacity). For true non-editable behavior that also dims the toolbar, prefer `readonly` / `setReadOnly()`.
 
 ## Templates
 
@@ -368,6 +411,8 @@ Buttons after `||` begin collapsed behind a toggle (`...`) button.
 | `italic` | Toggle italic |
 | `underline` | Toggle underline |
 | `strikethrough` | Toggle strikethrough |
+| `subscript` | Toggle subscript |
+| `superscript` | Toggle superscript |
 | `bullist` | Bullet list |
 | `numlist` | Numbered list |
 | `outdent` | Decrease indent |
@@ -376,6 +421,8 @@ Buttons after `||` begin collapsed behind a toggle (`...`) button.
 | `fontfamily` | Font family dropdown |
 | `fontsize` | Font size dropdown |
 | `lineheight` | Line height dropdown |
+| `blocks` | Block format dropdown &mdash; Paragraph, Heading 1&ndash;6 (alias `formatselect`) |
+| `styles` | Named styles dropdown (configurable via `style_formats`) |
 | `template` | Template dropdown (requires `includeTemplates: true`) |
 | `alignleft` | Left align |
 | `aligncenter` | Center align |
@@ -390,14 +437,20 @@ Buttons after `||` begin collapsed behind a toggle (`...`) button.
 | `undo` | Undo |
 | `redo` | Redo |
 | `image` | Insert image (upload or URL) |
+| `table` | Table dropdown (insert table + row/column/cell operations) |
+| `hr` | Insert horizontal rule |
 | `charmap` | Special character picker |
 | `emoticons` | Emoji picker with search |
-| `code` | Toggle code block |
+| `code` | Open HTML source code editor dialog |
 | `link` | Insert/edit hyperlink |
+| `unlink` | Remove the link at the cursor |
+| `anchor` | Insert a named anchor (`<a id>` target) |
 | `codesample` | Toggle code sample |
 | `fullscreen` | Toggle fullscreen |
 | `preview` | Preview in new window |
 | `searchreplace` | Find & Replace dialog |
+| `speechtotext` | Open Speech to Text dialog (requires `speech_to_text` + browser support) |
+| `dictate` | Toggle inline dictation &mdash; inserts speech at the cursor (requires `speech_to_text` + browser support) |
 | `ltr` | Left-to-right direction |
 | `rtl` | Right-to-left direction |
 

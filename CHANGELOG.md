@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-06-09
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.5.0`
+
+### Added
+
+Capabilities now available through the pass-through `config` prop, courtesy of the
+underlying `@mdaemon/html-editor` 1.5.0 upgrade:
+
+- **New toolbar buttons:** `subscript`, `superscript`, `blocks` (alias `formatselect`),
+  `styles`, `table`, `hr`, `unlink`, `anchor`, `speechtotext`, and `dictate`
+- **Confab skins:** `skin` and `content_css` now accept `'confab'` / `'confab-dark'`
+  in addition to `'oxide'` / `'oxide-dark'`
+- **Read-only mode:** `readonly` config option plus `setReadOnly()` / `isReadOnly()`
+  on the underlying editor (via `getEditor()`)
+- **Block & style formats:** `block_formats` (block dropdown) and `style_formats`
+  (named styles dropdown) config options
+- **Enter behavior:** `forced_root_block` (`'p'` | `'div'`) for CKEditor `ENTER_DIV` parity
+- **Image upload controls:** `images_file_types`, `images_upload_validate`, and
+  `images_upload_error` for restricting and rejecting uploads
+- **Sizing:** `min_height` and `max_height` config options
+- **Paste & content options:** `paste_from_office`, `speech_to_text`,
+  `convert_unsafe_embeds`, `format_empty_lines`, and `trailingNode`
+- **CKEditor config aliases:** `font_names` (for `font_family_formats`) and
+  `fontSize_sizes` (for `font_size_formats`)
+- **New editor events:** `languagechange` and `templatechange`
+
 ## [1.2.1] - 2026-06-09
 
 ### Changed
