@@ -236,7 +236,18 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `toolbar` | `string` | *(preset)* | Custom toolbar layout string. |
 | `toolbar_mode` | `'sliding' \| 'floating' \| 'wrap'` | `'wrap'` | Toolbar overflow behavior. |
 | `toolbar_sticky` | `boolean` | `true` | Pin toolbar at top when scrolling. |
+| `toolbar_narrow_breakpoint` | `number` | &mdash; | Pixel width below which the toolbar collapses into the overflow toggle. |
+| `toolbar_priority` | `Record<string, number>` | &mdash; | Per-button overflow priority &mdash; higher values stay visible longer as the toolbar narrows. |
+| `menubar` | `boolean` | `false` | Show a TinyMCE-style menu bar above the toolbar. |
+| `contextmenu` | `boolean \| string` | `''` | Enable a right-click context menu. Pass a button-list string to customize its contents. |
+| `quickbars_selection_toolbar` | `string` | `'bold italic \| quicklink blockquote'` | Inline floating toolbar shown over a text selection. |
+| `quickbars_image_toolbar` | `boolean` | `false` | Inline floating toolbar shown when an image is selected. |
+| `quickbars_insert_toolbar` | `boolean` | `false` | Inline floating toolbar shown on empty lines for quick insertion. |
+| `elementpath` | `boolean` | `false` | Show a breadcrumb of the node path at the cursor in the status bar. |
+| `valid_children` | `string` | &mdash; | TinyMCE-style rules controlling which child elements are allowed. |
 | `auto_focus` | `string` | &mdash; | Auto-focus on init. |
+| `setFocus` | `string` | &mdash; | CSS selector for the element to focus on init (used when `auto_focus` is not set). |
+| `plugins` | `string` | &mdash; | Accepted for TinyMCE compatibility and ignored &mdash; all features are built in. |
 | `browser_spellcheck` | `boolean` | `true` | Enable browser spell check. |
 | `entity_encoding` | `'raw' \| 'named' \| 'numeric'` | `'raw'` | HTML entity encoding mode. |
 | `paste_from_office` | `boolean` | `true` | Clean and preserve formatting when pasting from Microsoft Word/Excel. |
@@ -289,6 +300,25 @@ The `confab` / `confab-dark` skins integrate with the WorldClient theming system
   }}
 />
 ```
+
+### Menu Bar, Context Menu & Quick Toolbars
+
+Opt into the additional editing surfaces exposed by `@mdaemon/html-editor` 1.6.0:
+
+```tsx
+<Editor
+  config={{
+    menubar: true,                  // menu bar above the toolbar
+    contextmenu: true,              // right-click context menu
+    quickbars_selection_toolbar: 'bold italic | quicklink blockquote',
+    quickbars_image_toolbar: true,  // floating toolbar when an image is selected
+    elementpath: true,              // breadcrumb status bar at the cursor
+  }}
+/>
+```
+
+`contextmenu` also accepts a button-list string to customize its contents, and
+`quickbars_insert_toolbar` shows a floating insert toolbar on empty lines.
 
 ### Read-Only Mode
 

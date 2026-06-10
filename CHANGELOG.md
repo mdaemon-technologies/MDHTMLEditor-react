@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-06-10
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.6.0`
+
+### Added
+
+Capabilities now available through the pass-through `config` prop, courtesy of the
+underlying `@mdaemon/html-editor` 1.6.0 upgrade:
+
+- **Menu bar:** `menubar` toggles a TinyMCE-style menu bar above the toolbar (default `false`)
+- **Context menu:** `contextmenu` (`boolean | string`) enables a right-click context menu;
+  pass a button-list string to customize its contents
+- **Quick toolbars (quickbars):** inline floating toolbars via
+  `quickbars_selection_toolbar` (button-list string, default
+  `'bold italic | quicklink blockquote'`), `quickbars_image_toolbar`, and
+  `quickbars_insert_toolbar`
+- **Element path:** `elementpath` shows a breadcrumb of the node path at the cursor
+  in the status bar (default `false`)
+- **Responsive toolbar controls:** `toolbar_narrow_breakpoint` (pixel width at which
+  the toolbar collapses) and `toolbar_priority` (`Record<string, number>` per-button
+  overflow priority)
+- **Content validation:** `valid_children` for TinyMCE-style allowed-child rules
+- **Focus targeting:** `setFocus` accepts a CSS selector to focus on init (used when
+  `auto_focus` is not set)
+- **TinyMCE compatibility:** a `plugins` string is accepted and ignored (all features
+  are built in), easing migration from existing TinyMCE configs
+
 ## [1.3.0] - 2026-06-09
 
 ### Changed
