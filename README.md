@@ -668,6 +668,25 @@ npm run demo
 
 This starts a Vite dev server at `http://localhost:5173` with examples of both the `<Editor>` component and `useEditor` hook.
 
+## Development
+
+The package is bundled with [Vite 8](https://vite.dev/) (Rolldown) and ships ES, CommonJS, and TypeScript declaration outputs.
+
+| Script | Description |
+|--------|-------------|
+| `npm run build` | Production build to `dist/` (ES + CJS + `.d.ts`). |
+| `npm run build:dev` | Development build (unminified, sourcemaps). |
+| `npm run dev` | Rebuild on change (watch mode). |
+| `npm test` | Run the Jest test suite. |
+| `npm run test:coverage` | Run tests with coverage. |
+| `npm run lint` | Lint `src` with ESLint. |
+| `npm run typecheck` | Type-check with `tsc --noEmit`. |
+| `npm run demo` | Launch the demo app. |
+
+> **Node.js:** building the package requires Node `^20.19.0 || >=22.12.0` (a Vite 8 requirement). Consumers of the published package are unaffected.
+
+Lint, typecheck, and tests run automatically in [CI](.github/workflows/ci.yml) on every push and pull request to `master` across Node 20, 22, 24, and 26.
+
 ## License
 
 LGPL-3.0-or-later &mdash; [MDaemon Technologies, Ltd.](https://www.mdaemon.com)

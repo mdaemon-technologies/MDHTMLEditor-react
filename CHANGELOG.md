@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.1] - 2026-06-12
+
+Tooling and CI only &mdash; no changes to the published runtime API or component behavior.
+
+### Added
+
+- GitHub Actions CI workflow (`.github/workflows/ci.yml`) running lint, typecheck,
+  and tests on Node 20, 22, 24, and 26 for pushes and pull requests to `master`
+- ESLint flat config (`eslint.config.mjs`) with TypeScript and React rule sets
+
+### Changed
+
+- Upgraded the build toolchain to Vite 8 (Rolldown-based): `vite` `^8.0.16`,
+  `@vitejs/plugin-react` `^6.0.2`, and `vite-plugin-dts` `^5.0.2`
+- Renamed `build.rollupOptions` to `build.rolldownOptions` in `vite.config.ts`
+  (the former is now a deprecated alias under Vite 8)
+
+### Fixed
+
+- Removed a Jest `moduleNameMapper` entry that resolved `@mdaemon/html-editor` to a
+  local sibling-repo source path, which broke the test suite in clean/CI checkouts
+
 ## [1.4.0] - 2026-06-10
 
 ### Changed

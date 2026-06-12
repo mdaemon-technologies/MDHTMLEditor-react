@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
       formats: ['es', 'cjs'],
       fileName: (format) => `index.${format === 'es' ? 'mjs' : 'js'}`,
     },
-    rollupOptions: {
+    rolldownOptions: {
       external: ['react', 'react-dom', 'react/jsx-runtime', '@mdaemon/html-editor'],
       output: {
         globals: {

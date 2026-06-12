@@ -19,9 +19,6 @@ export default {
       },
     }],
   },
-  moduleNameMapper: {
-    '^@mdaemon/html-editor$': '<rootDir>/../MDHTMLEditor/src/index.ts',
-  },
   setupFilesAfterEnv: ['<rootDir>/__tests__/setup.ts'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
