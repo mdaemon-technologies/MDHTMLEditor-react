@@ -87,7 +87,9 @@ export function useEditor(options: UseEditorOptions = {}): UseEditorReturn {
       editorRef.current = null;
       setReady(false);
     };
-  }, []); // Only mount once
+    // Editor is created once on mount; config/content/onUpdate are read via closure.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   const getContent = useCallback(() => {
     return editorRef.current?.getContent() ?? '';

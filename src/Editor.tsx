@@ -218,7 +218,9 @@ export const Editor = forwardRef<EditorRef, EditorProps>(function Editor(
         globalEditor = null;
       }
     };
-  }, []); // Only run once on mount
+    // Editor is created once on mount; event handlers read latest props via closure.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   // Update disabled state
   useEffect(() => {
