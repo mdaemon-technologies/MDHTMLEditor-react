@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Editor, useEditor } from '../src';
 import type { EditorRef } from '../src';
+import type { HTMLEditor } from '@mdaemon/html-editor';
 
 const sampleHTML = `
 <h2>Welcome to MDHTMLEditor</h2>
@@ -105,6 +106,96 @@ function HookDemo() {
   );
 }
 
+function FontDemo() {
+  const editorRef = useRef<EditorRef>(null);
+  const probeRef = useRef<HTMLInputElement>(null);
+  const [family, setFamily] = useState('');
+  const [size, setSize] = useState('');
+  const [focusReport, setFocusReport] = useState('');
+  const [content, setContent] = useState('');
+
+  const handleInit = useCallback((editor: HTMLEditor) => {
+    // The editor must not pull focus away from the field that had it (fixed in 1.8.0).
+    const kept = document.activeElement === probeRef.current;
+    setFocusReport(kept ? 'input still focused ✓' : 'editor stole focus ✗');
+
+    const sync = () => {
+      setFamily(editor.getFontFamily());
+      setSize(editor.getFontSize());
+    };
+    sync();
+
+    // The editor has no selection event of its own, so listen on the TipTap instance.
+    const tiptap = editor.getTipTap();
+    tiptap?.on('selectionUpdate', sync);
+    tiptap?.on('transaction', sync);
+  }, []);
+
+  const setBlockFamily = useCallback((value: string) => {
+    editorRef.current?.getEditor()?.getTipTap()?.chain().focus().setBlockFontFamily(value).run();
+  }, []);
+
+  const setBlockSize = useCallback((value: string) => {
+    editorRef.current?.getEditor()?.getTipTap()?.chain().focus().setBlockFontSize(value).run();
+  }, []);
+
+  return (
+    <section>
+      <h2>Fonts</h2>
+      <p className="description">
+        The configured <code>fontName</code> / <code>fontSize</code> are inlined on every block,
+        so they survive export. <code>getFontFamily()</code> and <code>getFontSize()</code> report
+        the font in effect at the cursor — move the caret between the paragraphs below and watch
+        both the toolbar's font buttons and the readout follow it. Select across the first two
+        paragraphs and both blank out, because the selection spans two fonts. Set a font in the
+        empty paragraph and it persists instead of being discarded when the selection moves.
+      </p>
+
+      <label className="probe">
+        Focus probe (autofocused on load):{' '}
+        <input ref={probeRef} autoFocus defaultValue="the editor should not take this focus" />
+      </label>
+
+      <Editor
+        ref={editorRef}
+        config={{
+          height: 250,
+          fontName: 'Georgia, serif',
+          fontSize: '14pt',
+        }}
+        initialValue={
+          '<p>This paragraph carries the configured block font.</p>' +
+          '<p><span style="font-family: Courier New, monospace">This span overrides it inline.</span></p>' +
+          '<p></p>'
+        }
+        onInit={handleInit}
+        onChange={(html) => setContent(html)}
+      />
+
+      <div className="controls">
+        <button onClick={() => setBlockFamily('Comic Sans MS, cursive')}>Block font → Comic Sans</button>
+        <button onClick={() => setBlockFamily('Georgia, serif')}>Block font → Georgia</button>
+        <button onClick={() => setBlockSize('24pt')}>Block size → 24pt</button>
+        <button onClick={() => setBlockSize('14pt')}>Block size → 14pt</button>
+      </div>
+
+      <div className="controls">
+        <span className="status readout">
+          At cursor: <code>{family || '—'}</code> / <code>{size || '—'}</code> · Focus on init:{' '}
+          {focusReport || '—'}
+        </span>
+      </div>
+
+      {content && (
+        <details open>
+          <summary>Raw HTML Output</summary>
+          <pre><code>{content}</code></pre>
+        </details>
+      )}
+    </section>
+  );
+}
+
 export default function App() {
   return (
     <div className="app">
@@ -116,6 +207,8 @@ export default function App() {
       <ComponentDemo />
       <hr />
       <HookDemo />
+      <hr />
+      <FontDemo />
 
       <style>{`
         * { box-sizing: border-box; }
@@ -180,6 +273,22 @@ export default function App() {
           margin-left: auto;
           font-size: 0.85rem;
           color: #888;
+        }
+        .status.readout {
+          margin-left: 0;
+        }
+        .probe {
+          display: block;
+          margin-bottom: 1rem;
+          font-size: 0.85rem;
+          color: #555;
+        }
+        .probe input {
+          padding: 0.4rem 0.6rem;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 0.85rem;
+          min-width: 20rem;
         }
         details {
           margin-top: 1rem;

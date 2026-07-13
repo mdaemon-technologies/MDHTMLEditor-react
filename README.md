@@ -224,8 +224,8 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `skin` | `'oxide' \| 'oxide-dark' \| 'confab' \| 'confab-dark'` | `'oxide'` | Toolbar and dialog theme. |
 | `content_css` | `'default' \| 'dark' \| 'confab' \| 'confab-dark'` | `'default'` | Content area theme. |
 | `content_style` | `string` | &mdash; | Custom CSS injected into the editing surface. |
-| `fontName` | `string` | &mdash; | Default font family. |
-| `fontSize` | `string` | &mdash; | Default font size. |
+| `fontName` | `string` | `'arial, helvetica, sans-serif'` | Default font family. Inlined on every block in the exported HTML &mdash; see [Fonts](#fonts). |
+| `fontSize` | `string` | `'12pt'` | Default font size. Inlined on every paragraph in the exported HTML &mdash; see [Fonts](#fonts). |
 | `font_family_formats` | `string` | *(TinyMCE defaults)* | Semicolon-delimited font list (`Name=family,...`). |
 | `font_size_formats` | `string` | `'8pt 9pt 10pt 12pt 14pt 18pt 24pt 36pt'` | Space-delimited size options. |
 | `font_names` | `string` | &mdash; | CKEditor alias for `font_family_formats`. |
@@ -335,6 +335,77 @@ const isReadOnly = editorRef.current?.getEditor()?.isReadOnly();
 ```
 
 > The `disabled` prop applies a lightweight visual lock (pointer-events off, reduced opacity). For true non-editable behavior that also dims the toolbar, prefer `readonly` / `setReadOnly()`.
+
+## Fonts
+
+`fontName` and `fontSize` set the editor's default font. The defaults are written directly onto each block in the exported HTML (`font-family` on `<p>`/`<div>`/`<hN>`, `font-size` on `<p>`/`<div>`) rather than relying on the editor's stylesheet being present, so the content keeps its font when it is rendered somewhere else &mdash; an email body opened in another client, for example. Headings keep their level-based sizing and carry no block `font-size`.
+
+```tsx
+<Editor
+  config={{
+    fontName: 'Georgia, serif',
+    fontSize: '14pt',
+  }}
+/>
+```
+
+Selecting text and picking a font or size from the `fontfamily` / `fontsize` toolbar dropdowns produces an inline `<span>` that overrides the block default, so a single paragraph can mix fonts and sizes.
+
+### The Toolbar Shows the Font at the Cursor
+
+The `fontfamily` and `fontsize` toolbar buttons display the value in effect at the cursor &mdash; "Georgia", "14pt" &mdash; and update as the caret moves, instead of showing the static words "Font" and "Font size". A family is shown by its configured name (the label side of `font_family_formats`); a font that is not in the configured list, such as one pasted in from another editor, is shown by its first family name. Labels are width-constrained and ellipsized so the toolbar does not reflow as the caret moves, with the full text on each button's `title`.
+
+Where no single value applies, the button falls back to the generic word. That happens for a selection spanning two different fonts or sizes, and for font size inside a heading.
+
+> This is styled by rules in `@mdaemon/html-editor/dist/styles.css` &mdash; make sure the [stylesheet import](#styles) is present, and re-check any custom CSS you have layered on top of the toolbar buttons.
+
+### Reading the Current Font
+
+`getFontFamily()` and `getFontSize()` report the font in effect at the cursor, resolving an inline `<span>` override first, then the block's own font, then the configured default:
+
+```tsx
+const editor = editorRef.current?.getEditor();
+
+const family = editor?.getFontFamily(); // e.g. 'Georgia, serif'
+const size = editor?.getFontSize();     // e.g. '14pt'
+```
+
+Use these to drive a custom font picker outside the toolbar. Unlike reading the inline mark directly, they still return a value when the font comes from the block or the configured default.
+
+Both return `''` when there is no single value to report:
+
+- the selection spans more than one font family / size
+- for `getFontSize()`, the cursor is in a heading with no inline override (headings size by level and carry no block `font-size`)
+
+Treat `''` as "mixed / not applicable" and blank your picker, rather than falling back to a default &mdash; that is what the toolbar does.
+
+The editor emits no selection event of its own, so subscribe on the TipTap instance to keep a readout in sync with the caret:
+
+```tsx
+const handleInit = useCallback((editor: HTMLEditor) => {
+  const sync = () => {
+    setFamily(editor.getFontFamily());
+    setSize(editor.getFontSize());
+  };
+
+  sync();
+  editor.getTipTap()?.on('selectionUpdate', sync);
+  editor.getTipTap()?.on('transaction', sync);
+}, []);
+
+<Editor config={{ fontName: 'Georgia, serif', fontSize: '14pt' }} onInit={handleInit} />
+```
+
+### Setting a Block Font
+
+To change the font on every block the selection touches &mdash; instead of adding an inline override &mdash; use the `setBlockFontFamily` / `setBlockFontSize` commands on the underlying TipTap instance:
+
+```tsx
+const tiptap = editorRef.current?.getEditor()?.getTipTap();
+
+tiptap?.chain().focus().setBlockFontFamily('Georgia, serif').run();
+tiptap?.chain().focus().setBlockFontSize('14pt').run();
+```
 
 ## Templates
 
@@ -666,7 +737,7 @@ A demo app is included to see the editor in action:
 npm run demo
 ```
 
-This starts a Vite dev server at `http://localhost:5173` with examples of both the `<Editor>` component and `useEditor` hook.
+This starts a Vite dev server at `http://localhost:5173` with three sections: the `<Editor>` component, the `useEditor` hook, and a [Fonts](#fonts) panel with a live `getFontFamily()` / `getFontSize()` readout that follows the cursor and buttons for the block-font commands.
 
 ## Development
 
@@ -680,7 +751,7 @@ The package is bundled with [Vite 8](https://vite.dev/) (Rolldown) and ships ES,
 | `npm test` | Run the Jest test suite. |
 | `npm run test:coverage` | Run tests with coverage. |
 | `npm run lint` | Lint `src` with ESLint. |
-| `npm run typecheck` | Type-check with `tsc --noEmit`. |
+| `npm run typecheck` | Type-check `src` and `demo` with `tsc --noEmit`. |
 | `npm run demo` | Launch the demo app. |
 
 > **Node.js:** building the package requires Node `^20.19.0 || >=22.12.0` (a Vite 8 requirement). Consumers of the published package are unaffected.

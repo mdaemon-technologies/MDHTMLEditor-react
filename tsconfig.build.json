@@ -3,5 +3,6 @@
   "compilerOptions": {
     "rootDir": "./src",
     "declarationMap": false
-  }
+  },
+  "include": ["src"]
 }
