@@ -53,7 +53,7 @@
     "react-dom": "^19.0.0 || ^18.0.0"
   },
   "dependencies": {
-    "@mdaemon/html-editor": "^1.9.0",
+    "@mdaemon/html-editor": "^1.9.3",
     "@tiptap/react": "^3.27.4"
   },
   "devDependencies": {
