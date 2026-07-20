@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] - 2026-07-20
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.10.0` (from `^1.9.0`, picking up 1.9.1,
+  1.9.2, 1.9.3, and 1.10.0)
+
+### Added
+
+Inherited from the underlying `@mdaemon/html-editor` 1.10.0 upgrade:
+
+- **`Tab` / `Shift+Tab` now indent, and no longer escape the editor.** Previously
+  `Tab` only did anything inside a list &mdash; anywhere else it moved keyboard focus
+  out of the editor to the next element on the page. `Tab` now adds a left indent to
+  the paragraph(s) or heading(s) in the selection (and `Shift+Tab` removes it), while
+  keeping the context-aware behavior elsewhere: it still moves between cells in a
+  table, inserts a literal tab in a code block, and nests / lifts list items. The
+  `indent` / `outdent` toolbar buttons and `execCommand('indent' | 'outdent')` follow
+  the same rule (list &rarr; nest, otherwise &rarr; block indent). The indent is stored
+  as an inline `margin-left` (40px steps, up to 400px), so it survives in the exported
+  HTML when the content is rendered without the editor stylesheet &mdash; an email body
+  in another client, for example &mdash; and an incoming `margin-left` is read back as
+  the starting indent.
+- **A keyboard escape hatch keeps the editor from trapping focus** (WCAG 2.1.2, "No
+  Keyboard Trap"). Because `Tab` is now captured, pressing **`Esc` then `Tab`** moves
+  focus to the next focusable element outside the editor instead of indenting, and
+  **`Esc` then `Shift+Tab`** moves to the previous one. `Esc` arms this for a single
+  key press; any other key disarms it.
+
+### Fixed
+
+Fixes inherited from the underlying `@mdaemon/html-editor` upgrade:
+
+- **Blank lines survive being rendered outside the editor, and are stable across
+  round-trips** (1.9.1, 1.9.3). TipTap serializes an empty line as a bare
+  `<p></p>` / `<div></div>`, which collapses to zero height in mail clients and other
+  consumers &mdash; so blank lines a user typed appeared to vanish on send.
+  `getContent()` now injects a `<br>` into each empty block, and `setContent()` runs
+  the exact inverse and strips it back out on import, so a re-imported blank line is
+  modeled as one genuinely empty line rather than doubling on every save/reload cycle.
+  `setContent(getContent(x))` is now stable across any number of round-trips. This is
+  gated on the existing `format_empty_lines` option (default `true`); set it to
+  `false` to pass the engine's output through unchanged in both directions.
+- **`Ctrl/Cmd+B`, `Ctrl+I`, `Ctrl+U`, and `Ctrl+Z` work again** (1.9.2). These chords
+  were being handled twice &mdash; once by TipTap and once by a redundant toolbar
+  listener &mdash; so the two toggles cancelled out (bold/italic/underline appeared to
+  do nothing) and `Ctrl+Z` undid two steps at once. Holding `Shift` slipped past the
+  duplicate listener, which is why the marks only seemed to work with `Ctrl+Shift`
+  held. The redundant bindings were removed; `Ctrl/Cmd+F` (Find & Replace) is
+  unaffected and still handled by the toolbar.
+- **Content whose closing-tag slashes were backslash-escaped (`<\/p>`, `<\/li>`) now
+  imports as real tags instead of literal garbage text** (1.10.0). Some hosts serialize
+  the editor's HTML through encoders that escape `/` as `\/` &mdash; most notably PHP's
+  `json_encode`, which does this by default. `setContent()`, `insertContent()`, and the
+  Templates dropdown now normalize `<\/` back to `</` before parsing, restoring
+  TinyMCE's lenient behavior.
+
 ## [1.5.0] - 2026-07-13
 
 ### Changed

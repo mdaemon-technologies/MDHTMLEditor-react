@@ -255,7 +255,7 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `paste_from_office` | `boolean` | `true` | Clean and preserve formatting when pasting from Microsoft Word/Excel. |
 | `speech_to_text` | `boolean` | `true` | Enable the `speechtotext` and `dictate` toolbar buttons (requires the Web Speech API). |
 | `convert_unsafe_embeds` | `boolean` | `true` | Sanitize embedded content. |
-| `format_empty_lines` | `boolean` | `true` | Format empty lines. |
+| `format_empty_lines` | `boolean` | `true` | Preserve blank lines outside the editor. `getContent()` fills each empty block with a `<br>` (bare empty blocks otherwise collapse to zero height in mail clients) and `setContent()` strips it back out, so `setContent(getContent(x))` is stable across round-trips. Set `false` to pass output through unchanged. |
 | `includeTemplates` | `boolean` | `false` | Show the template dropdown. |
 | `templates` | `Template[]` | `[]` | Predefined HTML templates. |
 | `dropbox` | `boolean` | `false` | Enable Dropbox integration. |
@@ -518,8 +518,8 @@ Buttons after `||` begin collapsed behind a toggle (`...`) button.
 | `superscript` | Toggle superscript |
 | `bullist` | Bullet list |
 | `numlist` | Numbered list |
-| `outdent` | Decrease indent |
-| `indent` | Increase indent |
+| `outdent` | Decrease indent (lifts a list item, or removes block `margin-left`) |
+| `indent` | Increase indent (nests a list item, or adds block `margin-left`) |
 | `blockquote` | Toggle block quote |
 | `fontfamily` | Font family dropdown |
 | `fontsize` | Font size dropdown |
@@ -652,6 +652,14 @@ setGetFileSrc((path) => `https://cdn.example.com${path}`);
 | Ctrl/Cmd + Z | Undo |
 | Ctrl/Cmd + Shift + Z | Redo |
 | Ctrl/Cmd + F | Find & Replace |
+| Tab | Indent &mdash; nests a list item, moves to the next table cell, or adds block indent |
+| Shift + Tab | Outdent &mdash; lifts a list item, moves to the previous table cell, or removes block indent |
+| Esc, then Tab | Move focus to the next element outside the editor (keyboard escape) |
+| Esc, then Shift + Tab | Move focus to the previous element outside the editor |
+
+> `Tab` is captured for indentation, so the `Esc`-then-`Tab` sequence provides a
+> keyboard escape (WCAG 2.1.2, "No Keyboard Trap"). `Esc` arms the escape for a single
+> key press; any other key disarms it.
 
 ## Form Integration
 
