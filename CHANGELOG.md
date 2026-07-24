@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.6.1] - 2026-07-24
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.10.1` (from `^1.10.0`)
+
+### Fixed
+
+Fixes inherited from the underlying `@mdaemon/html-editor` 1.10.1 upgrade:
+
+- **`onChange` now receives exactly what `getContent()` returns.** The blank-line
+  handling described under 1.6.0 lived only in `getContent()` / `setContent()`; the
+  `change` event emitted the engine's raw HTML instead. So an `<Editor onChange={...}>`
+  or a `useEditor({ onUpdate })` that saved the payload directly &mdash; the usual
+  autosave / draft-sync / controlled-value pattern &mdash; stored content whose blank
+  lines carried no `<br>` and collapsed to zero height when rendered outside the editor,
+  while the same component's `getContent()` returned the corrected HTML. The two are now
+  byte-identical.
+- **Every other path in and out of the editor now applies the same pair of passes**, so
+  the input and output sides can no longer disagree:
+  - `insertContent()` no longer doubles blank lines when handed a fragment that came from
+    `getContent()` (a saved snippet, a stored draft) &mdash; it previously skipped the
+    import-side strip and passed the export-only `<br>` to TipTap as a hard break.
+  - The **Templates** dropdown (`includeTemplates` / `templates`) went through TipTap
+    directly and applied neither pass; it now routes through `insertContent()`.
+  - The **source dialog** displayed raw HTML and saved raw HTML, so opening it and
+    pressing Save without editing was not a no-op and could double blank lines.
+  - **Preview** rendered raw HTML in the new window &mdash; exactly the out-of-editor
+    context `format_empty_lines` exists for &mdash; so previewed blank lines collapsed
+    while the sent content kept them.
+
+  `format_empty_lines: false` still opts out of both directions on every path.
+
 ## [1.6.0] - 2026-07-20
 
 ### Changed

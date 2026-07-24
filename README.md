@@ -255,7 +255,7 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `paste_from_office` | `boolean` | `true` | Clean and preserve formatting when pasting from Microsoft Word/Excel. |
 | `speech_to_text` | `boolean` | `true` | Enable the `speechtotext` and `dictate` toolbar buttons (requires the Web Speech API). |
 | `convert_unsafe_embeds` | `boolean` | `true` | Sanitize embedded content. |
-| `format_empty_lines` | `boolean` | `true` | Preserve blank lines outside the editor. `getContent()` fills each empty block with a `<br>` (bare empty blocks otherwise collapse to zero height in mail clients) and `setContent()` strips it back out, so `setContent(getContent(x))` is stable across round-trips. Set `false` to pass output through unchanged. |
+| `format_empty_lines` | `boolean` | `true` | Preserve blank lines outside the editor. On the way out (`getContent()`, the `onChange` payload, preview, and the source dialog) each empty block is filled with a `<br>` &mdash; bare empty blocks otherwise collapse to zero height in mail clients; on the way in (`setContent()`, `insertContent()`, templates) it is stripped back out, so `setContent(getContent(x))` is stable across round-trips. Set `false` to pass content through unchanged in both directions. |
 | `includeTemplates` | `boolean` | `false` | Show the template dropdown. |
 | `templates` | `Template[]` | `[]` | Predefined HTML templates. |
 | `dropbox` | `boolean` | `false` | Enable Dropbox integration. |
