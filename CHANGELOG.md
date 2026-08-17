@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.1] - 2026-08-17
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.11.1` (from `^1.11.0`)
+
+### Fixed
+
+Inherited from the underlying `@mdaemon/html-editor` 1.11.1 upgrade:
+
+- **The confab skin's `blockquote` toolbar icon was replaced.** The old icon drew two
+  closing curly quotation marks whose tails made it read as "99"; it is now a quote bar
+  beside indented text lines, matching the other line-based icons in the set. This only
+  affects the `'confab'` / `'confab-dark'` skins.
+
+## [1.7.0] - 2026-08-12
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.11.0` (from `^1.10.1`)
+
+### Added
+
+Inherited from the underlying `@mdaemon/html-editor` 1.11.0 upgrade:
+
+- **The text color and highlight color pickers now have separate palettes, and the text
+  palette is built for readable text.** Both pickers previously shared one 26-swatch list
+  chosen for highlighting: a grayscale ramp, the fully-saturated hues, and eight pale
+  tints &mdash; roughly half of it illegible as a font color on a white background, with
+  no dark shades at all. **`forecolor` (text)** now offers 40 colors in four rows of ten,
+  aligned by hue column: the grayscale ramp, the saturated hues, and two rows of
+  progressively darker shades. **`backcolor` (highlight)** keeps the original 26 colors
+  unchanged &mdash; the pale tints are exactly what makes a good marker. This is a
+  **visible toolbar change** if your users rely on the color pickers.
+- **Both palettes are configurable through the pass-through `config` prop, with
+  TinyMCE-compatible keys.** `color_map_foreground` and `color_map_background` set one
+  picker each; `color_map` sets both and is overridden by either specific key. All three
+  accept TinyMCE's flat form (`['#FF0000', 'Red', ...]`) or an array of `ColorOption`
+  objects. Omitting them keeps the per-picker built-in defaults.
+- **Both pickers gained a `Remove color` entry.** Color could previously only be cleared
+  with `removeformat`, which strips *every* mark on the selection &mdash; clearing a font
+  color also lost its bold, italic, and font size. The new entry clears only the color.
+  `execCommand` gained the matching behavior: passing `''` or `'none'` as the value to
+  `forecolor`, `backcolor`, or `hilitecolor` clears instead of setting.
+
+### Fixed
+
+Fixes inherited from the underlying `@mdaemon/html-editor` 1.11.0 upgrade:
+
+- The `forecolor`/`backcolor` menus are portaled to `document.body` and carried nothing
+  to identify which picker they belonged to; they now carry a `data-colorpicker-menu`
+  attribute, so custom CSS or tests can target each picker's menu.
+- Removed a duplicated `padding` declaration on `.md-toolbar-colorpicker-menu`.
+
 ## [1.6.1] - 2026-07-24
 
 ### Changed
