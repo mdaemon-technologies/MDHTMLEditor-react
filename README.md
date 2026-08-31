@@ -252,7 +252,7 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `plugins` | `string` | &mdash; | Accepted for TinyMCE compatibility and ignored &mdash; all features are built in. |
 | `browser_spellcheck` | `boolean` | `true` | Enable browser spell check. |
 | `entity_encoding` | `'raw' \| 'named' \| 'numeric'` | `'raw'` | HTML entity encoding mode. |
-| `paste_from_office` | `boolean` | `true` | Clean and preserve formatting when pasting from Microsoft Word/Excel. |
+| `paste_from_office` | `boolean` | `true` | Clean and preserve formatting when pasting from Microsoft Word/Excel. Pasted list indentation is normalized either way &mdash; see [Lists & Indentation](#lists--indentation). |
 | `speech_to_text` | `boolean` | `true` | Enable the `speechtotext` and `dictate` toolbar buttons (requires the Web Speech API). |
 | `convert_unsafe_embeds` | `boolean` | `true` | Sanitize embedded content. |
 | `format_empty_lines` | `boolean` | `true` | Preserve blank lines outside the editor. On the way out (`getContent()`, the `onChange` payload, preview, and the source dialog) each empty block is filled with a `<br>` &mdash; bare empty blocks otherwise collapse to zero height in mail clients; on the way in (`setContent()`, `insertContent()`, templates) it is stripped back out, so `setContent(getContent(x))` is stable across round-trips. Set `false` to pass content through unchanged in both directions. |
@@ -407,6 +407,47 @@ tiptap?.chain().focus().setBlockFontFamily('Georgia, serif').run();
 tiptap?.chain().focus().setBlockFontSize('14pt').run();
 ```
 
+## Lists & Indentation
+
+### Increase / Decrease Indent
+
+The `indent` / `outdent` toolbar buttons, `execCommand('indent' | 'outdent')`, and the <kbd>Tab</kbd> / <kbd>Shift</kbd>+<kbd>Tab</kbd> keys all resolve to the same behavior, chosen by what is under the cursor:
+
+| Context | Increase indent | Decrease indent |
+|---------|-----------------|-----------------|
+| List item with a previous sibling | Nests it one level deeper | Reduces its own indent, then un-nests it one level |
+| First list item at its level | Adds a `margin-left` to the `<li>` | Reduces that margin, then lifts the item out of the list |
+| Paragraph, heading | Adds a `margin-left` in 40px steps (max 400px) | Removes one step |
+| Code block | Inserts a literal tab | Nothing |
+
+Inside a list the indent is written to the `<li>` rather than to the paragraph inside it, so the bullet or number moves with the text. Because it is an inline `margin-left`, it survives in the exported HTML &mdash; in a mail client, say &mdash; without the editor's stylesheet. In a table, <kbd>Tab</kbd> still moves between cells; the toolbar buttons indent the paragraph in the cell.
+
+### Ordered List Numbering
+
+An ordered list's numbering style is preserved rather than normalized to `1, 2, 3`. `<ol type="A">`, `type="a"`, `type="I"`, `type="i"` and `start="5"` round-trip through `setContent()` / `getContent()` and render as written. A list that states its style with CSS instead (`<ol style="list-style-type:upper-alpha">`) is read the same way and exported as `<ol type="A">`.
+
+```tsx
+<Editor
+  config={{}}
+  initialValue='<ol type="A" start="3"><li><p>Third</p></li><li><p>Fourth</p></li></ol>'
+/>
+// renders as C. Third / D. Fourth
+```
+
+Lists that declare nothing keep the editor's nesting defaults: decimal, then lower-alpha, then lower-roman for ordered lists; disc, circle, then square for bullets.
+
+> If you layer your own CSS on the editing surface (`content_style`, or a stylesheet in the host app), avoid a blanket `ol { list-style-type: ... }` reset &mdash; it outranks the `type` attribute and flattens typed lists back to decimal.
+
+### Pasting a List
+
+Lists pasted from Word, Outlook, Google Docs, another editor, or a web page are normalized on the way in:
+
+- **Indentation is dropped.** Those sources position a list with inline `margin-left` / `padding-left` / `text-indent` from their own page layout. Carried over, that stacks on top of the editor's list indent, so a pasted list sits a level further right than one built with the toolbar. Nesting is structural (`<ol><li><ol>`), so nothing is lost by dropping it. Indentation on non-list blocks (paragraphs, blockquotes) is left alone.
+- **A list that is already a real `<ol>`/`<ul>` stays one list.** Word and Outlook email HTML often marks up a genuine list whose `<li>`s also carry Word's `MsoListParagraph` class and `mso-list` metadata; those items are cleaned in place instead of being wrapped in a second list.
+- **Word's numbering style is kept.** `mso-level-number-format` (and `mso-level-start-at`) become the list's `type` and `start`, so a lettered or roman Word list is not renumbered. When the clipboard carries no `@list` rules at all &mdash; common &mdash; the style is inferred from the marker text Word inlines (`A.`, `iv.`, `1.`, `&middot;`), which also keeps a numbered list from arriving as a bullet list.
+
+Word/Excel cleaning as a whole can be turned off with [`paste_from_office: false`](#configuration); list indentation is normalized either way.
+
 ## Templates
 
 Enable the template dropdown and provide a `templates` array:
@@ -518,8 +559,8 @@ Buttons after `||` begin collapsed behind a toggle (`...`) button.
 | `superscript` | Toggle superscript |
 | `bullist` | Bullet list |
 | `numlist` | Numbered list |
-| `outdent` | Decrease indent (lifts a list item, or removes block `margin-left`) |
-| `indent` | Increase indent (nests a list item, or adds block `margin-left`) |
+| `outdent` | Decrease indent &mdash; un-nests a list item, or removes block `margin-left` (see [Lists & Indentation](#lists--indentation)) |
+| `indent` | Increase indent &mdash; nests a list item, or adds block `margin-left` (see [Lists & Indentation](#lists--indentation)) |
 | `blockquote` | Toggle block quote |
 | `fontfamily` | Font family dropdown |
 | `fontsize` | Font size dropdown |
@@ -652,8 +693,8 @@ setGetFileSrc((path) => `https://cdn.example.com${path}`);
 | Ctrl/Cmd + Z | Undo |
 | Ctrl/Cmd + Shift + Z | Redo |
 | Ctrl/Cmd + F | Find & Replace |
-| Tab | Indent &mdash; nests a list item, moves to the next table cell, or adds block indent |
-| Shift + Tab | Outdent &mdash; lifts a list item, moves to the previous table cell, or removes block indent |
+| Tab | Increase indent &mdash; nests or indents a list item, moves to the next table cell, inserts a tab in a code block, or indents the block ([details](#lists--indentation)) |
+| Shift + Tab | Decrease indent &mdash; un-nests a list item, moves to the previous table cell, or removes block indent ([details](#lists--indentation)) |
 | Esc, then Tab | Move focus to the next element outside the editor (keyboard escape) |
 | Esc, then Shift + Tab | Move focus to the previous element outside the editor |
 

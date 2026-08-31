@@ -5,6 +5,76 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-08-31
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.12.0` (from `^1.11.1`)
+
+### Added
+
+Inherited from the underlying `@mdaemon/html-editor` 1.12.0 upgrade:
+
+- **Ordered lists now render with the numbering style they declare.** `<ol type="A">`,
+  `type="a"`, `type="I"`, `type="i"` and `start="N"` already round-tripped through
+  `setContent()` / `getContent()`, but the editor's own stylesheet forced
+  `list-style-type: decimal` on screen &mdash; an HTML `type` attribute is only a
+  presentational hint, which any author CSS outranks &mdash; so every lettered or roman
+  list *displayed* as 1, 2, 3. Each `type` value now has an explicit rule and the
+  nesting defaults are scoped with `:not([type])`, so a host-app CSS reset cannot strip
+  the markers off a typed list either. A list that states its style in CSS
+  (`<ol style="list-style-type:upper-alpha">`) is read the same way and exported as
+  `<ol type="A">`. This is a **visible rendering change** for content that carries
+  `type` or `start`.
+- **Increase / decrease indent now work inside lists.** The toolbar buttons,
+  `execCommand('indent' | 'outdent')` and <kbd>Tab</kbd> / <kbd>Shift</kbd>+<kbd>Tab</kbd>
+  share one context-aware pair of commands, so the three can no longer disagree. In a
+  list, increase indent nests the item where it can and otherwise adds a `margin-left`;
+  decrease indent takes that margin back first and then un-nests. The margin is written
+  to the `<li>` rather than the paragraph inside it, so the bullet or number moves with
+  the text, and it survives in exported HTML &mdash; in a mail client, say &mdash;
+  without the editor's stylesheet.
+
+### Fixed
+
+Fixes inherited from the underlying `@mdaemon/html-editor` 1.12.0 upgrade:
+
+- **Pasting a numbered list from Word or Outlook no longer indents it an extra level.**
+  Office email HTML often contains a genuine `<ol>` whose `<li>`s *also* carry Word's
+  `MsoListParagraph` class and `mso-list` metadata; the Word-list converter read those
+  items as fake-list paragraphs and built a second list around them, producing
+  `<ol><ol>&hellip;</ol></ol>` &mdash; a phantom empty item plus a list one level too
+  deep. Such items are now cleaned in place.
+- **Pasted lists no longer carry the source document's own indentation.** Word writes
+  `margin-left:.5in;text-indent:-.25in` on every list paragraph and Google Docs writes
+  `padding-inline-start:48px` on the list; stacked on top of the editor's list indent, a
+  pasted list sat further right than one built with the toolbar. Inline
+  left-indentation is now stripped from pasted `<ol>`/`<ul>`/`<li>` &mdash; nesting is
+  structural, so nothing is lost &mdash; on every paste, not just Office content.
+  Indentation on pasted paragraphs and blockquotes is untouched.
+- **Pasting a lettered or roman list from Word no longer renumbers it to 1, 2, 3.**
+  `mso-level-number-format` had been reduced to a single ordered/unordered boolean; it
+  now maps to the list's `type`, and `mso-level-start-at` is read into `start`.
+- **A Word list pasted without `@list` rules no longer arrives as a bullet list.** Many
+  clipboards carry no `@list` block at all, and the missing rule defaulted to unordered.
+  The numbering is now inferred from the marker text Word inlines (`1.`, `A.`, `iv.`,
+  `&middot;`), including the starting number; an explicit `@list` rule still wins.
+- Decrease indent was a silent no-op on the first item of a list, as was increase
+  indent &mdash; the <kbd>Tab</kbd> key already had the fallback the toolbar buttons
+  lacked.
+- Increase indent could apply two steps for one press, by indenting both a node and its
+  descendants; it now adjusts only the outermost indentable node in each branch.
+
+`paste_from_office: false` still turns off Word/Excel cleaning as a whole; list
+indentation is normalized either way.
+
+### Documentation
+
+- New **Lists & Indentation** section in the README covering the indent behavior per
+  context, ordered-list numbering, and how pasted lists are normalized. The `indent` /
+  `outdent` toolbar-button and <kbd>Tab</kbd> keyboard-shortcut descriptions were
+  updated to match.
+
 ## [1.7.1] - 2026-08-17
 
 ### Changed
