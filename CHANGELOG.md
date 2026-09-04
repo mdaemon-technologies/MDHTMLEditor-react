@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.8.1] - 2026-09-04
+
+Dependency upgrade only &mdash; no changes to this package's API, props, ref methods, or
+component behavior.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.12.1` (from `^1.12.0`)
+- Upgraded `@tiptap/react` to `^3.31.3` (from `^3.27.4`)
+
+The underlying `@mdaemon/html-editor` 1.12.1 release is itself a TipTap bump: all 21
+`@tiptap/*` packages it depends on moved from 3.27.4 to 3.31.3 together. Raising
+`@tiptap/react` to the same version keeps the whole ProseMirror stack on a single
+resolved copy, so a consuming app's bundler does not end up with two versions of
+`@tiptap/core` / `@tiptap/pm` &mdash; which ProseMirror does not tolerate (duplicate
+`prosemirror-model` schemas throw at runtime). If your app also depends on `@tiptap/*`
+directly, upgrade it to 3.31.3 as well.
+
+This is a patch-level move inside TipTap 3.x with no public API, config, or runtime
+behavior changes on either package's surface. The wrapper's Jest suite (72 tests),
+`tsc --noEmit`, ESLint, and the production build all pass against the new versions.
+
 ## [1.8.0] - 2026-08-31
 
 ### Changed

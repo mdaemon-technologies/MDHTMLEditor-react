@@ -12,6 +12,13 @@ npm install @mdaemon/html-editor-react @mdaemon/html-editor
 
 **Peer dependencies:** `react` and `react-dom` (v18 or v19).
 
+**TipTap:** the editor is built on TipTap 3, and this package tracks the same version the
+engine uses &mdash; currently **3.31.3** (`@mdaemon/html-editor` `^1.12.1`,
+`@tiptap/react` `^3.31.3`). If your app depends on any `@tiptap/*` package directly, keep
+it on that version too: ProseMirror throws at runtime if two copies of `@tiptap/core` /
+`@tiptap/pm` end up in the bundle. If you only use `<Editor>` or `useEditor`, there is
+nothing to do.
+
 ## Styles
 
 You must import the editor stylesheet for the toolbar and UI to render correctly:
