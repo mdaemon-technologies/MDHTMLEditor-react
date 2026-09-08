@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.8.2] - 2026-09-08
+
+Dependency upgrade only &mdash; no changes to this package's API, props, ref methods, or
+component behavior.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.12.2` (from `^1.12.1`)
+
+### Fixed
+
+Inherited from the underlying `@mdaemon/html-editor` 1.12.2 upgrade:
+
+- **A pretty-printed template no longer imports with extra bullets and stray blank
+  blocks.** Stored templates are usually kept as authored &mdash; indented, one block per
+  line &mdash; so real newlines and tabs sit between the block elements, including as
+  direct children of `<ul>`. `insertContent()` (the path the Templates dropdown uses)
+  preserved that whitespace, and because ProseMirror cannot place a bare text node inside
+  `bullet_list`, it wrapped each whitespace run in a list item of its own: a 2-bullet list
+  arrived as 4 bullets, each inter-block newline run became an empty `<div>`, and the
+  surviving tabs rendered as visible breaks. `setContent()` and `insertContent()` now both
+  parse with `preserveWhitespace: false`, the collapse-per-HTML-rules mode a browser
+  itself uses. `<pre>` / code blocks keep their indentation, and Ctrl+V is unaffected.
+- **A block containing only `&nbsp;` is no longer treated as an empty line.**
+  `format_empty_lines` appends a `<br>` to blank blocks so they keep their height outside
+  the editor, but its emptiness test used `String.prototype.trim()`, which strips U+00A0.
+  A deliberate `<div>&nbsp;</div>` spacer therefore exported as `<div>&nbsp;<br></div>`
+  and rendered at double height in the sent message. Both the serializer and its
+  import-time inverse now measure emptiness against ASCII whitespace only, so an `&nbsp;`
+  counts as the visible content it is and round-trips unchanged.
+
+Both fixes are in the engine; this wrapper passes content straight through, so consumers
+get them by upgrading the `@mdaemon/html-editor` dependency alone. `@tiptap/react` stays
+at `^3.31.3` &mdash; 1.12.2 does not move TipTap.
+
+The wrapper's Jest suite (72 tests), `tsc --noEmit`, ESLint, and the production build all
+pass against the new version.
+
 ## [1.8.1] - 2026-09-04
 
 Dependency upgrade only &mdash; no changes to this package's API, props, ref methods, or

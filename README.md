@@ -13,7 +13,7 @@ npm install @mdaemon/html-editor-react @mdaemon/html-editor
 **Peer dependencies:** `react` and `react-dom` (v18 or v19).
 
 **TipTap:** the editor is built on TipTap 3, and this package tracks the same version the
-engine uses &mdash; currently **3.31.3** (`@mdaemon/html-editor` `^1.12.1`,
+engine uses &mdash; currently **3.31.3** (`@mdaemon/html-editor` `^1.12.2`,
 `@tiptap/react` `^3.31.3`). If your app depends on any `@tiptap/*` package directly, keep
 it on that version too: ProseMirror throws at runtime if two copies of `@tiptap/core` /
 `@tiptap/pm` end up in the bundle. If you only use `<Editor>` or `useEditor`, there is
@@ -262,7 +262,7 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `paste_from_office` | `boolean` | `true` | Clean and preserve formatting when pasting from Microsoft Word/Excel. Pasted list indentation is normalized either way &mdash; see [Lists & Indentation](#lists--indentation). |
 | `speech_to_text` | `boolean` | `true` | Enable the `speechtotext` and `dictate` toolbar buttons (requires the Web Speech API). |
 | `convert_unsafe_embeds` | `boolean` | `true` | Sanitize embedded content. |
-| `format_empty_lines` | `boolean` | `true` | Preserve blank lines outside the editor. On the way out (`getContent()`, the `onChange` payload, preview, and the source dialog) each empty block is filled with a `<br>` &mdash; bare empty blocks otherwise collapse to zero height in mail clients; on the way in (`setContent()`, `insertContent()`, templates) it is stripped back out, so `setContent(getContent(x))` is stable across round-trips. Set `false` to pass content through unchanged in both directions. |
+| `format_empty_lines` | `boolean` | `true` | Preserve blank lines outside the editor. On the way out (`getContent()`, the `onChange` payload, preview, and the source dialog) each empty block is filled with a `<br>` &mdash; bare empty blocks otherwise collapse to zero height in mail clients; on the way in (`setContent()`, `insertContent()`, templates) it is stripped back out, so `setContent(getContent(x))` is stable across round-trips. A block is only "empty" if it has no visible content &mdash; a `<div>&nbsp;</div>` spacer counts as content and is left alone. Set `false` to pass content through unchanged in both directions. |
 | `includeTemplates` | `boolean` | `false` | Show the template dropdown. |
 | `templates` | `Template[]` | `[]` | Predefined HTML templates. |
 | `dropbox` | `boolean` | `false` | Enable Dropbox integration. |
@@ -492,6 +492,11 @@ interface Template {
   content: string;
 }
 ```
+
+`content` may be pretty-printed &mdash; indented, one block per line. The newlines and
+tabs between block elements are collapsed per the usual HTML rules when the template is
+inserted, so they do not become extra list items or blank blocks. Indentation inside a
+`<pre>` or code block is preserved.
 
 ## Custom Toolbar Buttons
 
