@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.8.3] - 2026-09-10
+
+Dependency upgrade only &mdash; no changes to this package's API, props, ref methods, or
+component behavior.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.12.3` (from `^1.12.2`)
+
+### Fixed
+
+Inherited from the underlying `@mdaemon/html-editor` 1.12.3 upgrade &mdash; three import
+fixes, all of which show up when a stored email template is loaded:
+
+- **A link with an empty `href` is no longer deleted on import.** `<a href="">` &mdash; the
+  shape a template carries when the author wrote the link text and left the target for
+  later, or when an upstream sanitizer blanked it &mdash; arrived as plain text, the anchor
+  discarded and only its words kept. TipTap's link parse rule opens with
+  `if (!href || !isAllowedUri(href)) return false`, so an empty string short-circuits to
+  "not a link" before URI validation is ever consulted; a real template with nine such
+  anchors lost all nine. The parse rule now accepts the empty-string case, which is also
+  the shape TipTap itself *emits* &mdash; its `renderHTML` rewrites a URI it rejects to
+  `href=""`. Security is unchanged: an absent `href` still fails (that is a named anchor),
+  and every non-empty href still goes through `isAllowedUri`, so `javascript:` and `data:`
+  targets are rejected exactly as before.
+- **Container `<div>`s no longer import as a run of blank lines.** Mail clients and CMSes
+  wrap stored HTML in several nested `<div>`s around the real content. The editor's schema
+  has one block node per line and its content expression is `inline*`, so a block cannot
+  contain a block: the ProseMirror parser opened a paragraph for each wrapper, closed it
+  again to place the first block child, and left the wrapper behind as an empty paragraph.
+  A template swaddled in five `<div>`s therefore opened with four blank lines that were
+  never in the source. Import now dissolves a `<div>`/`<p>` holding only block-level
+  children and no text of its own, hoisting its children into the parent.
+- **A wrapper's font now reaches the lines it wrapped.** Following from the above: a body
+  wrapped in one `<div style="font-family:Georgia;font-size:10pt">` stranded that style on
+  the empty block the wrapper became, and every real line silently fell back to the
+  editor's default font &mdash; the "11pt where the source says 10pt" drift seen on imported
+  templates. The inherited properties (`font-family`, `font-size`, `font-weight`,
+  `font-style`, `color`, `line-height`, `text-align`, `text-indent`, `direction`) are now
+  carried down to the children, never overriding one a child already states. Box
+  properties are not: border, background, padding and margin describe the wrapper itself
+  and cannot be re-expressed on *n* children.
+
+Blocks that own their nesting are exempt from the flattening and keep their structure:
+`<blockquote>`, list items and table cells are real nodes with block content, the
+signature container (`<div id="signature">`) is left intact for `SignatureBlock` to claim,
+and a genuinely empty `<div></div>` is a blank line the author typed rather than a
+wrapper. `<pre>` / code blocks are untouched.
+
+All three fixes are in the engine's import path; this wrapper passes content straight
+through, so consumers get them by upgrading the `@mdaemon/html-editor` dependency alone.
+`@tiptap/react` stays at `^3.31.3` &mdash; 1.12.3 does not move TipTap.
+
+The wrapper's Jest suite (72 tests), `tsc --noEmit`, ESLint, and the production build all
+pass against the new version.
+
 ## [1.8.2] - 2026-09-08
 
 Dependency upgrade only &mdash; no changes to this package's API, props, ref methods, or

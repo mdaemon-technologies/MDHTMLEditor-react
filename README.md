@@ -13,7 +13,7 @@ npm install @mdaemon/html-editor-react @mdaemon/html-editor
 **Peer dependencies:** `react` and `react-dom` (v18 or v19).
 
 **TipTap:** the editor is built on TipTap 3, and this package tracks the same version the
-engine uses &mdash; currently **3.31.3** (`@mdaemon/html-editor` `^1.12.2`,
+engine uses &mdash; currently **3.31.3** (`@mdaemon/html-editor` `^1.12.3`,
 `@tiptap/react` `^3.31.3`). If your app depends on any `@tiptap/*` package directly, keep
 it on that version too: ProseMirror throws at runtime if two copies of `@tiptap/core` /
 `@tiptap/pm` end up in the bundle. If you only use `<Editor>` or `useEditor`, there is
@@ -497,6 +497,23 @@ interface Template {
 tabs between block elements are collapsed per the usual HTML rules when the template is
 inserted, so they do not become extra list items or blank blocks. Indentation inside a
 `<pre>` or code block is preserved.
+
+Stored templates are also tolerant of the wrappers and placeholders real-world HTML
+carries:
+
+- **Container `<div>`s do not become blank lines.** A body swaddled in several nested
+  `<div>`s (the shape mail clients and CMSes produce) is flattened on import rather than
+  leaving one empty line per wrapper.
+- **A wrapper's font reaches the lines it wrapped.** `font-family`, `font-size`, `color`,
+  `line-height`, `text-align` and the other inherited properties on a container are
+  carried down to its children, so a body wrapped in
+  `<div style="font-family:Georgia;font-size:10pt">` keeps that font instead of falling
+  back to the editor default. A child that states its own value wins.
+- **`<a href="">` survives.** A link whose target was left for later keeps its anchor
+  element instead of collapsing to plain text. Non-empty targets are still validated, so
+  `javascript:` and `data:` URLs are rejected as before.
+
+`<blockquote>`, list items, table cells and the signature container keep their structure.
 
 ## Custom Toolbar Buttons
 
