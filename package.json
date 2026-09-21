@@ -1,6 +1,6 @@
 {
   "name": "@mdaemon/html-editor-react",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "description": "React wrapper for MDHTMLEditor",
   "homepage": "https://github.com/mdaemon-technologies/MDHTMLEditor-react",
   "repository": {
@@ -48,6 +48,9 @@
     "url": "https://www.mdaemon.com"
   },
   "license": "LGPL-3.0-or-later",
+  "engines": {
+    "node": ">=20"
+  },
   "peerDependencies": {
     "react": "^19.0.0 || ^18.0.0",
     "react-dom": "^19.0.0 || ^18.0.0"

@@ -1,13 +1,19 @@
-[![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmdaemon-technologies%2FMDHTMLEditor-react%2Fmaster%2Fpackage.json&query=%24.version&prefix=v&label=npm&color=blue)](https://www.npmjs.com/package/@mdaemon/html-editor-react) [![install size](https://packagephobia.com/badge?p=@mdaemon/html-editor-react)](https://packagephobia.com/result?p=@mdaemon/html-editor-react) [![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmdaemon-technologies%2FMDHTMLEditor-react%2Fmaster%2Fpackage.json&query=%24.license&prefix=v&label=license&color=green)](https://github.com/mdaemon-technologies/MDHTMLEditor-react/blob/master/LICENSE) [![Node.js CI](https://github.com/mdaemon-technologies/MDHTMLEditor-react/actions/workflows/ci.yml/badge.svg)](https://github.com/mdaemon-technologies/MDHTMLEditor-react/actions/workflows/ci.yml)
+# @mdaemon/html-editor-react
 
-# MDHTMLEditor React
+[![npm](https://img.shields.io/npm/v/@mdaemon/html-editor-react?color=blue)](https://www.npmjs.com/package/@mdaemon/html-editor-react)
+[![license](https://img.shields.io/npm/l/@mdaemon/html-editor-react?color=green)](LICENSE)
+[![node](https://img.shields.io/node/v/@mdaemon/html-editor-react)](https://nodejs.org)
+[![install size](https://packagephobia.com/badge?p=@mdaemon/html-editor-react)](https://packagephobia.com/result?p=@mdaemon/html-editor-react)
+[![CI](https://github.com/mdaemon-technologies/MDHTMLEditor-react/actions/workflows/ci.yml/badge.svg)](https://github.com/mdaemon-technologies/MDHTMLEditor-react/actions/workflows/ci.yml)
+
+React wrapper for MDHTMLEditor
 
 A React wrapper for [MDHTMLEditor](https://github.com/mdaemon-technologies/MDHTMLEditor) &mdash; a WYSIWYG HTML editor built on TipTap. Provides a drop-in replacement for `@tinymce/tinymce-react` with no license key required.
 
-## Installation
+## Install
 
 ```bash
-npm install @mdaemon/html-editor-react @mdaemon/html-editor
+npm install @mdaemon/html-editor-react
 ```
 
 **Peer dependencies:** `react` and `react-dom` (v18 or v19).
@@ -484,7 +490,7 @@ const templates: Template[] = [
 
 The `Template` interface:
 
-```typescript
+```ts
 interface Template {
   id?: number | string;
   title: string;
@@ -807,16 +813,6 @@ Key differences:
 - `plugins` option is not needed &mdash; all features are built in
 - Toolbar customization uses `basicEditor: true/false` or a `toolbar` string
 
-## Running the Demo
-
-A demo app is included to see the editor in action:
-
-```bash
-npm run demo
-```
-
-This starts a Vite dev server at `http://localhost:5173` with three sections: the `<Editor>` component, the `useEditor` hook, and a [Fonts](#fonts) panel with a live `getFontFamily()` / `getFontSize()` readout that follows the cursor and buttons for the block-font commands.
-
 ## Development
 
 The package is bundled with [Vite 8](https://vite.dev/) (Rolldown) and ships ES, CommonJS, and TypeScript declaration outputs.
@@ -836,6 +832,24 @@ The package is bundled with [Vite 8](https://vite.dev/) (Rolldown) and ships ES,
 
 Lint, typecheck, and tests run automatically in [CI](.github/workflows/ci.yml) on every push and pull request to `master` across Node 20, 22, 24, and 26.
 
+### Running the Demo
+
+A demo app is included to see the editor in action:
+
+```bash
+npm run demo
+```
+
+This starts a Vite dev server at `http://localhost:5173` with three sections: the `<Editor>` component, the `useEditor` hook, and a [Fonts](#fonts) panel with a live `getFontFamily()` / `getFontSize()` readout that follows the cursor and buttons for the block-font commands.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
 ## License
 
-LGPL-3.0-or-later &mdash; [MDaemon Technologies, Ltd.](https://www.mdaemon.com)
+Published under the [LGPL-3.0-or-later](LICENSE) license.
+
+Published by **MDaemon Technologies, Ltd.**  
+Simple Secure Email  
+[https://www.mdaemon.com](https://www.mdaemon.com)

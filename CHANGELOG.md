@@ -1,9 +1,9 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/),
-and this project adheres to [Semantic Versioning](https://semver.org/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.8.3] - 2026-09-10
 
@@ -123,10 +123,6 @@ behavior changes on either package's surface. The wrapper's Jest suite (72 tests
 
 ## [1.8.0] - 2026-08-31
 
-### Changed
-
-- Upgraded `@mdaemon/html-editor` to `^1.12.0` (from `^1.11.1`)
-
 ### Added
 
 Inherited from the underlying `@mdaemon/html-editor` 1.12.0 upgrade:
@@ -150,6 +146,14 @@ Inherited from the underlying `@mdaemon/html-editor` 1.12.0 upgrade:
   to the `<li>` rather than the paragraph inside it, so the bullet or number moves with
   the text, and it survives in exported HTML &mdash; in a mail client, say &mdash;
   without the editor's stylesheet.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.12.0` (from `^1.11.1`)
+- New **Lists & Indentation** section in the README covering the indent behavior per
+  context, ordered-list numbering, and how pasted lists are normalized. The `indent` /
+  `outdent` toolbar-button and <kbd>Tab</kbd> keyboard-shortcut descriptions were
+  updated to match.
 
 ### Fixed
 
@@ -184,13 +188,6 @@ Fixes inherited from the underlying `@mdaemon/html-editor` 1.12.0 upgrade:
 `paste_from_office: false` still turns off Word/Excel cleaning as a whole; list
 indentation is normalized either way.
 
-### Documentation
-
-- New **Lists & Indentation** section in the README covering the indent behavior per
-  context, ordered-list numbering, and how pasted lists are normalized. The `indent` /
-  `outdent` toolbar-button and <kbd>Tab</kbd> keyboard-shortcut descriptions were
-  updated to match.
-
 ## [1.7.1] - 2026-08-17
 
 ### Changed
@@ -207,10 +204,6 @@ Inherited from the underlying `@mdaemon/html-editor` 1.11.1 upgrade:
   affects the `'confab'` / `'confab-dark'` skins.
 
 ## [1.7.0] - 2026-08-12
-
-### Changed
-
-- Upgraded `@mdaemon/html-editor` to `^1.11.0` (from `^1.10.1`)
 
 ### Added
 
@@ -235,6 +228,10 @@ Inherited from the underlying `@mdaemon/html-editor` 1.11.0 upgrade:
   color also lost its bold, italic, and font size. The new entry clears only the color.
   `execCommand` gained the matching behavior: passing `''` or `'none'` as the value to
   `forecolor`, `backcolor`, or `hilitecolor` clears instead of setting.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.11.0` (from `^1.10.1`)
 
 ### Fixed
 
@@ -280,11 +277,6 @@ Fixes inherited from the underlying `@mdaemon/html-editor` 1.10.1 upgrade:
 
 ## [1.6.0] - 2026-07-20
 
-### Changed
-
-- Upgraded `@mdaemon/html-editor` to `^1.10.0` (from `^1.9.0`, picking up 1.9.1,
-  1.9.2, 1.9.3, and 1.10.0)
-
 ### Added
 
 Inherited from the underlying `@mdaemon/html-editor` 1.10.0 upgrade:
@@ -306,6 +298,11 @@ Inherited from the underlying `@mdaemon/html-editor` 1.10.0 upgrade:
   focus to the next focusable element outside the editor instead of indenting, and
   **`Esc` then `Shift+Tab`** moves to the previous one. `Esc` arms this for a single
   key press; any other key disarms it.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.10.0` (from `^1.9.0`, picking up 1.9.1,
+  1.9.2, 1.9.3, and 1.10.0)
 
 ### Fixed
 
@@ -337,35 +334,6 @@ Fixes inherited from the underlying `@mdaemon/html-editor` upgrade:
 
 ## [1.5.0] - 2026-07-13
 
-### Changed
-
-- Upgraded `@mdaemon/html-editor` to `^1.9.0` (from `^1.6.0`, picking up 1.6.1, 1.7.0, 1.8.0, and 1.9.0)
-- Upgraded `@tiptap/react` to `^3.27.4`
-- **`getFontFamily()` / `getFontSize()` now return `''` for a selection spanning more than
-  one value** (1.9.0). They previously reported the value at the selection *head*, so a
-  selection covering both 12pt and 18pt text confidently answered "12pt". `getFontSize()`
-  likewise returns `''` inside a heading with no inline override, since headings size by
-  level and carry no block `font-size`. If you drive a custom font picker from these,
-  treat `''` as "mixed / not applicable" and blank the control rather than falling back to
-  a default. Collapsed cursors and single-value selections are unaffected.
-
-### Fixed
-
-Fixes inherited from the underlying `@mdaemon/html-editor` upgrade:
-
-- **The editor no longer steals focus on init.** The engine used to focus the editor
-  body while applying the configured `fontName` / `fontSize`, which overrode
-  `auto_focus` / `setFocus` and clobbered any focus the host app had placed elsewhere
-  &mdash; a common problem when an `<Editor>` mounts alongside other focusable fields
-  (subject lines, recipient pickers) in a React form.
-- **A font picked before typing is no longer discarded.** Choosing a font or size from
-  the `fontfamily` / `fontsize` dropdowns while the cursor sat in an empty block only
-  parked a transient mark that the next selection change dropped. Font changes made in
-  an empty block are now written to the block itself, so they survive a re-render or a
-  programmatic selection change and land in the exported HTML.
-- The toolbar's font and size dropdown *menus* now check-mark the font actually in effect at
-  the cursor, including when it comes from the block or the configured default.
-
 ### Added
 
 - **The toolbar font dropdowns display the font and size at the cursor** (1.9.0). The
@@ -396,8 +364,17 @@ Other upstream changes:
 - `@mdaemon/html-editor` also ships a self-contained UMD build for `<script>` / CDN use
   (1.7.0). This does not affect the React wrapper, which is consumed through a bundler.
 
-### Demo & Tooling
+### Changed
 
+- Upgraded `@mdaemon/html-editor` to `^1.9.0` (from `^1.6.0`, picking up 1.6.1, 1.7.0, 1.8.0, and 1.9.0)
+- Upgraded `@tiptap/react` to `^3.27.4`
+- **`getFontFamily()` / `getFontSize()` now return `''` for a selection spanning more than
+  one value** (1.9.0). They previously reported the value at the selection *head*, so a
+  selection covering both 12pt and 18pt text confidently answered "12pt". `getFontSize()`
+  likewise returns `''` inside a heading with no inline override, since headings size by
+  level and carry no block `font-size`. If you drive a custom font picker from these,
+  treat `''` as "mixed / not applicable" and blank the control rather than falling back to
+  a default. Collapsed cursors and single-value selections are unaffected.
 - The demo app (`npm run demo`) has a new **Fonts** section covering the new font behavior:
   a live `getFontFamily()` / `getFontSize()` readout that follows the cursor (and blanks to
   `—` on a mixed selection, mirroring the toolbar), `setBlockFontFamily` /
@@ -407,6 +384,23 @@ Other upstream changes:
   demo can no longer silently break against an upstream upgrade. Added `demo/vite-env.d.ts`
   for the CSS side-effect import, and pinned `tsconfig.build.json` to `src` so the
   declaration build is unaffected.
+
+### Fixed
+
+Fixes inherited from the underlying `@mdaemon/html-editor` upgrade:
+
+- **The editor no longer steals focus on init.** The engine used to focus the editor
+  body while applying the configured `fontName` / `fontSize`, which overrode
+  `auto_focus` / `setFocus` and clobbered any focus the host app had placed elsewhere
+  &mdash; a common problem when an `<Editor>` mounts alongside other focusable fields
+  (subject lines, recipient pickers) in a React form.
+- **A font picked before typing is no longer discarded.** Choosing a font or size from
+  the `fontfamily` / `fontsize` dropdowns while the cursor sat in an empty block only
+  parked a transient mark that the next selection change dropped. Font changes made in
+  an empty block are now written to the block itself, so they survive a re-render or a
+  programmatic selection change and land in the exported HTML.
+- The toolbar's font and size dropdown *menus* now check-mark the font actually in effect at
+  the cursor, including when it comes from the block or the configured default.
 
 ## [1.4.1] - 2026-06-12
 
@@ -432,10 +426,6 @@ Tooling and CI only &mdash; no changes to the published runtime API or component
 
 ## [1.4.0] - 2026-06-10
 
-### Changed
-
-- Upgraded `@mdaemon/html-editor` to `^1.6.0`
-
 ### Added
 
 Capabilities now available through the pass-through `config` prop, courtesy of the
@@ -459,11 +449,11 @@ underlying `@mdaemon/html-editor` 1.6.0 upgrade:
 - **TinyMCE compatibility:** a `plugins` string is accepted and ignored (all features
   are built in), easing migration from existing TinyMCE configs
 
-## [1.3.0] - 2026-06-09
-
 ### Changed
 
-- Upgraded `@mdaemon/html-editor` to `^1.5.0`
+- Upgraded `@mdaemon/html-editor` to `^1.6.0`
+
+## [1.3.0] - 2026-06-09
 
 ### Added
 
@@ -488,13 +478,17 @@ underlying `@mdaemon/html-editor` 1.5.0 upgrade:
   `fontSize_sizes` (for `font_size_formats`)
 - **New editor events:** `languagechange` and `templatechange`
 
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.5.0`
+
 ## [1.2.1] - 2026-06-09
 
 ### Changed
 
 - Upgraded `@mdaemon/html-editor` to `^1.4.2`
 
-## [1.0.3] - 2025-05-14
+## [1.0.3] - 2026-04-28
 
 ### Added
 
@@ -509,3 +503,18 @@ underlying `@mdaemon/html-editor` 1.5.0 upgrade:
 - `translate` and `getFileSrc` prop support
 - Demo app (`npm run demo`)
 - Full test suite with Jest + @testing-library/react
+
+[1.8.3]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.8.3
+[1.8.2]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.8.2
+[1.8.1]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.8.1
+[1.8.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.8.0
+[1.7.1]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.7.1
+[1.7.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.7.0
+[1.6.1]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.6.1
+[1.6.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.6.0
+[1.5.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.5.0
+[1.4.1]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.4.1
+[1.4.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.4.0
+[1.3.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.3.0
+[1.2.1]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.2.1
+[1.0.3]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.0.3
