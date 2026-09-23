@@ -5,6 +5,145 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-09-23
+
+Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or
+component behavior. The minor bump reflects the paste-as-Markdown feature inherited from the
+engine, which is reachable through the existing `config` prop, `getEditor()`, and `onInit`.
+
+### Added
+
+Inherited from the underlying `@mdaemon/html-editor` 1.13.0 upgrade:
+
+- **Paste Markdown as formatting.** Chat apps, AI assistants and README files hand out
+  Markdown, which until now pasted in as the raw `#`, `*` and `|` characters. A new mode
+  reads a paste as Markdown and inserts it as real formatting: headings, bold, italic,
+  strikethrough, inline code, links, images, bullet/ordered/nested lists, blockquotes,
+  horizontal rules, fenced code blocks with their language, and GFM tables. It is **off by
+  default** and stays on until turned off, the way TinyMCE's *Paste as text* does. Turn it
+  on with the new `paste_markdown: true` config option, the new `pastemarkdown` toolbar
+  button, `getEditor()?.setPasteMarkdown(true)` or
+  `execCommand('mceTogglePasteMarkdown')`; read it back with `isPasteMarkdownEnabled()`.
+  The button is deliberately **not** in the default toolbars, so no existing toolbar
+  changes &mdash; add `pastemarkdown` to a `toolbar` string to offer it. While the mode
+  is on the button carries the active background, a dot badge and `aria-pressed="true"`,
+  and the toolbar's `paste` button follows the mode as well.
+- **`pastemarkdownchange` event**, fired with the new boolean whenever the mode changes
+  (and only when it actually changes), so a host can remember the user's choice and pass it
+  back as `paste_markdown`. The mode is per editor instance and is not persisted by the
+  editor. Subscribe through `onInit`: `editor.on('pastemarkdownchange', cb)`. The
+  `EditorEvents` type this package re-exports now includes it.
+- Two decisions worth stating, because they differ from a strict Markdown reading. **A
+  single newline is a line break**, not a continuation of the same paragraph, since chat and
+  assistant output is written that way; a blank line still starts a new paragraph. **Task
+  lists paste as plain bullets** (`- [ ] item` becomes a bullet reading `item`) because the
+  editor has no checkbox node.
+- Markdown mode takes precedence over the built-in code-block paste for clipboards that
+  VS Code (and editors that copy the way it does) mark as code, so Markdown copied out of an
+  editor is converted rather than pasted as a syntax-highlighted code block. With the mode
+  off the code-block behaviour is unchanged.
+- While the mode is on, the clipboard's `text/html` is ignored and its `text/plain` is used,
+  so syntax-highlighted HTML that editors put on the clipboard beside the raw text does not
+  paste as coloured code. Pastes that carry files (images) are untouched, Markdown pasted
+  inside a code block stays literal, a URL pasted over a selection still becomes a link, and
+  drag-and-drop is never converted.
+- New README section **Pasting Markdown** covering the config option, the toolbar button,
+  the runtime toggle, and how to persist the user's choice with the `pastemarkdownchange`
+  event; `paste_markdown` added to the Configuration table and `pastemarkdown` to the
+  Available Toolbar Buttons table.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.13.0` (from `^1.12.3`, picking up 1.12.4 and
+  1.13.0). `@tiptap/react` stays at `^3.31.3` &mdash; 1.13.0 does not move TipTap.
+- The engine now depends on `marked` (MIT, pinned to `18.0.14`) for the Markdown
+  conversion. It is bundled into the engine's published output, which grows by roughly
+  45 KB unminified (about 10 KB gzipped). `@mdaemon/html-editor` is external to this
+  package's build, so the growth lands in the consuming app's bundle, not in this
+  package's `dist/`.
+- The toolbar's `paste` button now reads the clipboard's plain text even when HTML is
+  present (it needs it for Markdown mode). While the mode is on, text it cannot convert (in
+  a code block, or over the size limits) goes in through ProseMirror's own plain-text paste
+  rather than `insertContent`, so that text stays literal and multi-line text becomes
+  separate lines instead of one run-on paragraph. With the mode off the button behaves
+  exactly as before.
+- The paste sanitizer moved from `PasteFromOffice` into a shared `sanitizeDocument` used by
+  both paste paths. Two of the hardening changes below also apply to Word/Excel paste: an
+  `<svg>` or `<math>` element (a drawing or an equation) is now dropped rather than passed
+  to the schema, which discarded it anyway, and a `data:` URL is rejected on attributes
+  other than `src` &mdash; so `srcset="data:image/…"` no longer survives while
+  `src="data:image/…"` still does.
+
+### Security
+
+Inherited from the underlying `@mdaemon/html-editor` upgrade:
+
+- **The Preview window now carries a Content Security Policy that blocks script.**
+  `preview` opens a blank window and writes `getContent()` into it, and that window
+  inherits the host page's origin &mdash; so anything script-like that ever reached the
+  written HTML would run with the host application's privileges. Nothing the editor's schema
+  renders can do that, but Preview is the one place where editor content is re-parsed as
+  HTML in a live, same-origin document, and that should not depend on the schema staying
+  airtight. The written `<head>` now opens with
+  `default-src 'none'; img-src * data: blob: cid:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'`,
+  so images from every source the editor produces and the inline styles it writes keep
+  working while script, inline handlers, `javascript:` URLs, eval, frames, `<base>`
+  hijacks and form submission are blocked. Previewed content renders exactly as before.
+  (This is listed as 1.12.5 in the engine's changelog; the published 1.12.4 is 1.12.3 plus
+  an `engines` field, and the fix first shipped on npm in 1.13.0.)
+- **Pasted Markdown cannot run script.** Three independent layers: raw HTML inside the
+  Markdown is escaped to visible text, so `<img onerror=…>` pastes as characters rather
+  than an element (this also stops a paste forging the editor's own mention, signature and
+  anchor elements); the converted HTML is parsed and sanitized in an inert document and
+  handed to ProseMirror as nodes, never as a string re-parsed in the live page &mdash; which
+  is exactly how a mutation-XSS payload recovers its handler; and the schema then keeps only
+  the attributes it knows. Links are limited to the schemes TipTap allows, so `javascript:`
+  targets, including tab- and control-character-disguised forms, lose the link and keep
+  their text.
+- **The shared paste sanitizer is hardened**, which also benefits Word/Excel paste. It now
+  removes `style`, `link`, `meta`, `base`, `noscript`, `template`, `svg`, `math`,
+  `frame` and `frameset` on top of the scripting and form elements it already removed;
+  checks every URL-bearing attribute (`formaction`, `xlink:href`, `poster`, `background`,
+  `data`, `cite`, `srcset`, `ping`) rather than only `href`/`src`/`action`; and strips
+  ASCII whitespace and C0/C1 control characters before testing a URL, so
+  `java&#9;script:` is caught the way the browser would resolve it. `data:image/...` is
+  still allowed on `src`, so pasted and embedded images keep working, and is now rejected
+  on `href`.
+- **A crafted paste can no longer freeze the tab.** marked's inline tokenizer backtracks
+  over unmatched emphasis, so cost follows the shape of the Markdown rather than its size,
+  and any page can put whatever it likes on the clipboard. Conversion therefore runs on a
+  budget: it is abandoned after 750 ms, or immediately if the input exceeds 256 KB or any
+  single paragraph, heading, list item or table cell exceeds 5,000 characters. Deeply nested
+  input that overflows the parser's stack is caught rather than thrown. An abandoned
+  conversion is not a lost paste &mdash; the text goes in as an ordinary paste instead.
+- **Large unlabelled code blocks paste as plain text.** A fenced block with no language (or
+  any indented block) would otherwise be run through every syntax grammar to guess one,
+  costing seconds on a large block and repeating that on each keystroke. Over 10,000
+  characters the block is marked `language-plaintext` instead. Blocks with a stated
+  language are unaffected.
+
+All of the above lives in the engine; this wrapper passes config, content and events straight
+through, so consumers get it by upgrading this package alone. The wrapper's Jest suite
+(72 tests), `tsc --noEmit`, ESLint, and the production build all pass against the new
+version.
+
+## [1.8.4] - 2026-09-21
+
+Metadata and documentation release &mdash; no changes to this package's API or behavior, and
+the `@mdaemon/html-editor` dependency stays at `^1.12.3`.
+
+### Changed
+
+- Declared `engines.node: ">=20"` in `package.json`, matching the Node versions CI runs
+  against (20, 22, 24 and 26).
+- README: header rebuilt with npm, license, Node, install-size and CI badges; the install
+  command no longer lists `@mdaemon/html-editor` separately, since it is a dependency of
+  this package; **Running the Demo** moved under **Development**; **Changelog** and
+  **License** sections added.
+- CHANGELOG: links point at Keep a Changelog 1.1.0 and SemVer 2.0.0; sections within each
+  release reordered to Added / Changed / Fixed, with the former *Documentation* subsections
+  folded into *Changed*.
+
 ## [1.8.3] - 2026-09-10
 
 Dependency upgrade only &mdash; no changes to this package's API, props, ref methods, or

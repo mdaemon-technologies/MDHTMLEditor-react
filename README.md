@@ -19,7 +19,7 @@ npm install @mdaemon/html-editor-react
 **Peer dependencies:** `react` and `react-dom` (v18 or v19).
 
 **TipTap:** the editor is built on TipTap 3, and this package tracks the same version the
-engine uses &mdash; currently **3.31.3** (`@mdaemon/html-editor` `^1.12.3`,
+engine uses &mdash; currently **3.31.3** (`@mdaemon/html-editor` `^1.13.0`,
 `@tiptap/react` `^3.31.3`). If your app depends on any `@tiptap/*` package directly, keep
 it on that version too: ProseMirror throws at runtime if two copies of `@tiptap/core` /
 `@tiptap/pm` end up in the bundle. If you only use `<Editor>` or `useEditor`, there is
@@ -266,6 +266,7 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `browser_spellcheck` | `boolean` | `true` | Enable browser spell check. |
 | `entity_encoding` | `'raw' \| 'named' \| 'numeric'` | `'raw'` | HTML entity encoding mode. |
 | `paste_from_office` | `boolean` | `true` | Clean and preserve formatting when pasting from Microsoft Word/Excel. Pasted list indentation is normalized either way &mdash; see [Lists & Indentation](#lists--indentation). |
+| `paste_markdown` | `boolean` | `false` | Start with paste-as-Markdown on, so a paste is read as Markdown and inserted as real formatting. Toggle at runtime via `getEditor()?.setPasteMarkdown()` or the `pastemarkdown` toolbar button &mdash; see [Pasting Markdown](#pasting-markdown). |
 | `speech_to_text` | `boolean` | `true` | Enable the `speechtotext` and `dictate` toolbar buttons (requires the Web Speech API). |
 | `convert_unsafe_embeds` | `boolean` | `true` | Sanitize embedded content. |
 | `format_empty_lines` | `boolean` | `true` | Preserve blank lines outside the editor. On the way out (`getContent()`, the `onChange` payload, preview, and the source dialog) each empty block is filled with a `<br>` &mdash; bare empty blocks otherwise collapse to zero height in mail clients; on the way in (`setContent()`, `insertContent()`, templates) it is stripped back out, so `setContent(getContent(x))` is stable across round-trips. A block is only "empty" if it has no visible content &mdash; a `<div>&nbsp;</div>` spacer counts as content and is left alone. Set `false` to pass content through unchanged in both directions. |
@@ -461,6 +462,74 @@ Lists pasted from Word, Outlook, Google Docs, another editor, or a web page are 
 
 Word/Excel cleaning as a whole can be turned off with [`paste_from_office: false`](#configuration); list indentation is normalized either way.
 
+## Pasting Markdown
+
+Chat apps, AI assistants and README files hand out Markdown, which by default pastes in as
+the raw `#`, `*` and `|` characters. The editor's **Paste Markdown** mode reads a paste
+as Markdown and inserts it as real formatting: headings, bold, italic, strikethrough, inline
+code, links, images, bullet/ordered/nested lists, blockquotes, horizontal rules, fenced code
+blocks with their language, and GFM tables.
+
+The mode is **off by default** and, like TinyMCE's *Paste as text*, stays on once turned on
+until it is turned off again. It is per editor instance and the editor does not persist it.
+
+Turn it on at init with the `paste_markdown` config option, or at runtime through the raw
+editor instance:
+
+```tsx
+<Editor config={{ paste_markdown: true }} />
+
+// At runtime
+editorRef.current?.getEditor()?.setPasteMarkdown(true);
+const on = editorRef.current?.getEditor()?.isPasteMarkdownEnabled();
+
+// Or toggle it the TinyMCE way
+editorRef.current?.getEditor()?.execCommand('mceTogglePasteMarkdown');
+```
+
+The `pastemarkdown` toolbar button lets the user toggle the mode. It is deliberately **not**
+in any default toolbar, so no existing layout changes &mdash; add it to a `toolbar` string
+to offer it:
+
+```tsx
+<Editor config={{ toolbar: 'bold italic | copy cut paste pastemarkdown | undo redo' }} />
+```
+
+While the mode is on the button shows the active background, a dot badge and
+`aria-pressed="true"`, and the toolbar's `paste` button converts as well.
+
+To remember the user's choice, listen for the `pastemarkdownchange` event &mdash; fired with
+the new boolean, and only when it actually changes &mdash; and pass the saved value back as
+`paste_markdown` next time:
+
+```tsx
+<Editor
+  config={{ paste_markdown: savedPreference }}
+  onInit={(editor) => {
+    editor.on('pastemarkdownchange', (enabled) => savePreference(enabled));
+  }}
+/>
+```
+
+A few things worth knowing:
+
+- **A single newline is a line break**, not a continuation of the paragraph, because chat and
+  assistant output is written that way. A blank line still starts a new paragraph.
+- **Task lists paste as plain bullets** (`- [ ] item` becomes a bullet reading `item`) &mdash;
+  the editor has no checkbox node.
+- While the mode is on the clipboard's `text/plain` is used and its `text/html` ignored, so
+  syntax-highlighted HTML copied from a code editor does not paste as coloured code. Markdown
+  mode also takes precedence over the built-in code-block paste for clipboards that VS Code
+  (and editors that copy the way it does) mark as code.
+- Pastes that carry files (images), Markdown pasted inside a code block, and drag-and-drop are
+  never converted. A URL pasted over a selection still becomes a link either way.
+- **Pasted Markdown cannot run script.** Raw HTML inside the Markdown is escaped to visible
+  text, the converted HTML is sanitized in an inert document before it reaches ProseMirror,
+  and links are limited to the schemes TipTap allows.
+- Conversion runs on a budget so a crafted paste cannot freeze the tab: input over 256 KB, any
+  single paragraph, heading, list item or table cell over 5,000 characters, or a parse that
+  takes longer than 750 ms is abandoned and the text goes in as an ordinary paste instead.
+
 ## Templates
 
 Enable the template dropdown and provide a `templates` array:
@@ -612,7 +681,8 @@ Buttons after `||` begin collapsed behind a toggle (`...`) button.
 | `removeformat` | Strip all formatting |
 | `copy` | Copy selection |
 | `cut` | Cut selection |
-| `paste` | Paste from clipboard |
+| `paste` | Paste from clipboard (follows the paste-as-Markdown mode) |
+| `pastemarkdown` | Toggle paste-as-Markdown mode &mdash; not in any default toolbar (see [Pasting Markdown](#pasting-markdown)) |
 | `undo` | Undo |
 | `redo` | Redo |
 | `image` | Insert image (upload or URL) |
@@ -626,7 +696,7 @@ Buttons after `||` begin collapsed behind a toggle (`...`) button.
 | `anchor` | Insert a named anchor (`<a id>` target) |
 | `codesample` | Toggle code sample |
 | `fullscreen` | Toggle fullscreen |
-| `preview` | Preview in new window |
+| `preview` | Preview in new window (the window carries a Content Security Policy that blocks script) |
 | `searchreplace` | Find & Replace dialog |
 | `speechtotext` | Open Speech to Text dialog (requires `speech_to_text` + browser support) |
 | `dictate` | Toggle inline dictation &mdash; inserts speech at the cursor (requires `speech_to_text` + browser support) |
