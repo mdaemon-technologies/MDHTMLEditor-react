@@ -5,6 +5,45 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1] - 2026-09-29
+
+Dependency upgrade only &mdash; no changes to this package's props, ref methods, hook API, or
+component behavior.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.13.1` (from `^1.13.0`). `@tiptap/react` stays at
+  `^3.31.3` &mdash; 1.13.1 does not move TipTap.
+
+### Fixed
+
+Inherited from the underlying `@mdaemon/html-editor` 1.13.1 upgrade:
+
+- **Text typed after a pasted or inserted link is no longer added to the link.** After
+  pasting a URL or email address, pasting HTML or Markdown that ends in a link,
+  `insertContent()` (and so a Templates entry) ending in a link, or inserting a link from
+  the Link dialog with nothing selected, everything typed next &mdash; spaces included
+  &mdash; used to extend the link until Enter started a new block. The caret is now moved
+  out of the link after each of these, so the next text is plain, and the `link` toolbar
+  button shows inactive there. Deliberately unchanged: placing the caret at the end of an
+  existing link and typing still extends it (as in the browser and TinyMCE), and retyping
+  selected link text keeps the link with its title and target.
+- **Pasting a URL after Ctrl+A now replaces the content.** A URL or email address pasted
+  over a selection used to link the selection and discard the pasted text whatever the
+  selection was, so Ctrl+A then paste linked the whole document. It now links the selection
+  only when that lies inside one paragraph (selected text, or a selected inline item such as
+  a mention); over a larger selection (Ctrl+A, several paragraphs, a table cell selection)
+  it replaces the selection like any other paste.
+- **Clicking a link in the editor no longer opens it.** StarterKit v3 bundles its own Link
+  extension, which ran beside the configured one with TipTap's defaults, so its click
+  handler opened links in a new window despite `openOnClick: false`. StarterKit's copy is
+  now disabled, which also removes `link` from the "Duplicate extension names" warning
+  logged when an editor is created.
+- **The Link dialog edits the link under the caret instead of inserting a second one.** With
+  the caret on a link and nothing selected, the dialog pre-filled the URL but not the text,
+  and Save inserted a new linked copy beside the original. It now pre-fills the link's text
+  too, and Save updates that link's URL, text, title and target in place.
+
 ## [1.9.0] - 2026-09-23
 
 Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or
@@ -643,6 +682,9 @@ underlying `@mdaemon/html-editor` 1.5.0 upgrade:
 - Demo app (`npm run demo`)
 - Full test suite with Jest + @testing-library/react
 
+[1.9.1]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.9.1
+[1.9.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.9.0
+[1.8.4]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.8.4
 [1.8.3]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.8.3
 [1.8.2]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.8.2
 [1.8.1]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.8.1

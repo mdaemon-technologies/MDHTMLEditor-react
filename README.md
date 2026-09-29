@@ -19,7 +19,7 @@ npm install @mdaemon/html-editor-react
 **Peer dependencies:** `react` and `react-dom` (v18 or v19).
 
 **TipTap:** the editor is built on TipTap 3, and this package tracks the same version the
-engine uses &mdash; currently **3.31.3** (`@mdaemon/html-editor` `^1.13.0`,
+engine uses &mdash; currently **3.31.3** (`@mdaemon/html-editor` `^1.13.1`,
 `@tiptap/react` `^3.31.3`). If your app depends on any `@tiptap/*` package directly, keep
 it on that version too: ProseMirror throws at runtime if two copies of `@tiptap/core` /
 `@tiptap/pm` end up in the bundle. If you only use `<Editor>` or `useEditor`, there is
@@ -522,7 +522,8 @@ A few things worth knowing:
   mode also takes precedence over the built-in code-block paste for clipboards that VS Code
   (and editors that copy the way it does) mark as code.
 - Pastes that carry files (images), Markdown pasted inside a code block, and drag-and-drop are
-  never converted. A URL pasted over a selection still becomes a link either way.
+  never converted. A URL pasted over a selection within one paragraph still becomes a link
+  either way; over a larger selection (such as Ctrl+A) it replaces the selection.
 - **Pasted Markdown cannot run script.** Raw HTML inside the Markdown is escaped to visible
   text, the converted HTML is sanitized in an inert document before it reaches ProseMirror,
   and links are limited to the schemes TipTap allows.
@@ -691,7 +692,7 @@ Buttons after `||` begin collapsed behind a toggle (`...`) button.
 | `charmap` | Special character picker |
 | `emoticons` | Emoji picker with search |
 | `code` | Open HTML source code editor dialog |
-| `link` | Insert/edit hyperlink |
+| `link` | Insert/edit hyperlink (with the caret on a link, edits that link in place) |
 | `unlink` | Remove the link at the cursor |
 | `anchor` | Insert a named anchor (`<a id>` target) |
 | `codesample` | Toggle code sample |
