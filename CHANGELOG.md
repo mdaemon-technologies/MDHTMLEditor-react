@@ -5,6 +5,48 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-10-22
+
+Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or
+component behavior. The minor bump reflects the TipTap 3.32.0 upgrade and the new
+`CodeSample` extension inherited from the engine.
+
+### Added
+
+Inherited from the underlying `@mdaemon/html-editor` 1.14.0 upgrade:
+
+- **`CodeSample` extension and Ctrl+Alt+C shortcut.** The extension behind the Code sample
+  fix below adds the `toggleCodeSample()` command and binds Ctrl+Alt+C (Cmd+Option+C on
+  macOS) to it, so the shortcut works in `<Editor>` and `useEditor` with no changes. The
+  extension itself is exported from `@mdaemon/html-editor`, not re-exported from this
+  package; the command is reachable through `getEditor()` and `onInit`.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.14.0` (from `^1.13.1`) and `@tiptap/react` to
+  `^3.32.0` (from `^3.31.3`). TipTap packages pin their peers to exact versions, so the two
+  must move together: `@tiptap/react` 3.32.0 needs `@tiptap/core` and `@tiptap/pm` 3.32.0,
+  which html-editor 1.14.0 brings in.
+- Inherited from html-editor 1.14.0: **TipTap 3.32.0's new link-ending behavior is
+  overridden.** TipTap's Link extension now ends a link at whitespace typed at its end. The
+  editor keeps its documented behavior instead: typing at the end of a link, spaces
+  included, extends it, and retyping selected link text keeps the whole new text linked with
+  its title and target. Typed URLs are still autolinked, and text typed after a paste or a
+  Link-dialog insert still stays out of the link.
+
+### Fixed
+
+Inherited from the underlying `@mdaemon/html-editor` 1.14.0 upgrade:
+
+- **Code sample starts on the cursor's line.** Lines separated by a line break (Shift+Enter,
+  or `<br>` in loaded email and signature content) are still one paragraph, so turning on
+  **Code sample** used to convert all of them, including the lines before the cursor. The
+  `codesample` toolbar button and Ctrl+Alt+C now convert only the lines the selection
+  touches; the lines before and after stay text with their formatting, and a selection
+  across several lines becomes one code block. One undo reverts it. Turning a code block back
+  into text, a selection across several blocks, a paragraph without line breaks, and the
+  first line of a list item behave as before.
+
 ## [1.9.1] - 2026-09-29
 
 Dependency upgrade only &mdash; no changes to this package's props, ref methods, hook API, or

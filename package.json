@@ -1,6 +1,6 @@
 {
   "name": "@mdaemon/html-editor-react",
-  "version": "1.9.1",
+  "version": "1.10.0",
   "description": "React wrapper for MDHTMLEditor",
   "homepage": "https://github.com/mdaemon-technologies/MDHTMLEditor-react",
   "repository": {
@@ -56,8 +56,8 @@
     "react-dom": "^19.0.0 || ^18.0.0"
   },
   "dependencies": {
-    "@mdaemon/html-editor": "^1.13.1",
-    "@tiptap/react": "^3.31.3"
+    "@mdaemon/html-editor": "^1.14.0",
+    "@tiptap/react": "^3.32.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
