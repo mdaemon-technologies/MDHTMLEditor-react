@@ -3,7 +3,7 @@
 [![npm](https://img.shields.io/npm/v/@mdaemon/html-editor-react?color=blue)](https://www.npmjs.com/package/@mdaemon/html-editor-react)
 [![license](https://img.shields.io/npm/l/@mdaemon/html-editor-react?color=green)](LICENSE)
 [![node](https://img.shields.io/node/v/@mdaemon/html-editor-react)](https://nodejs.org)
-[![install size](https://packagephobia.com/badge?p=@mdaemon/html-editor-react)](https://packagephobia.com/result?p=@mdaemon/html-editor-react)
+[![install size](https://img.shields.io/npm/unpacked-size/@mdaemon/html-editor-react)](https://packagephobia.com/result?p=@mdaemon/html-editor-react)
 [![CI](https://github.com/mdaemon-technologies/MDHTMLEditor-react/actions/workflows/ci.yml/badge.svg)](https://github.com/mdaemon-technologies/MDHTMLEditor-react/actions/workflows/ci.yml)
 
 React wrapper for MDHTMLEditor
@@ -19,8 +19,8 @@ npm install @mdaemon/html-editor-react
 **Peer dependencies:** `react` and `react-dom` (v18 or v19).
 
 **TipTap:** the editor is built on TipTap 3, and this package tracks the same version the
-engine uses &mdash; currently **3.31.3** (`@mdaemon/html-editor` `^1.13.1`,
-`@tiptap/react` `^3.31.3`). If your app depends on any `@tiptap/*` package directly, keep
+engine uses &mdash; currently **3.32.0** (`@mdaemon/html-editor` `^1.14.0`,
+`@tiptap/react` `^3.32.0`). If your app depends on any `@tiptap/*` package directly, keep
 it on that version too: ProseMirror throws at runtime if two copies of `@tiptap/core` /
 `@tiptap/pm` end up in the bundle. If you only use `<Editor>` or `useEditor`, there is
 nothing to do.
@@ -695,7 +695,7 @@ Buttons after `||` begin collapsed behind a toggle (`...`) button.
 | `link` | Insert/edit hyperlink (with the caret on a link, edits that link in place) |
 | `unlink` | Remove the link at the cursor |
 | `anchor` | Insert a named anchor (`<a id>` target) |
-| `codesample` | Toggle code sample |
+| `codesample` | Toggle code sample on the lines the selection touches (lines split by Shift+Enter outside the selection stay text) |
 | `fullscreen` | Toggle fullscreen |
 | `preview` | Preview in new window (the window carries a Content Security Policy that blocks script) |
 | `searchreplace` | Find & Replace dialog |
@@ -799,6 +799,7 @@ setGetFileSrc((path) => `https://cdn.example.com${path}`);
 | Ctrl/Cmd + Z | Undo |
 | Ctrl/Cmd + Shift + Z | Redo |
 | Ctrl/Cmd + F | Find & Replace |
+| Ctrl + Alt + C (Cmd + Option + C on macOS) | Toggle code sample |
 | Tab | Increase indent &mdash; nests or indents a list item, moves to the next table cell, inserts a tab in a code block, or indents the block ([details](#lists--indentation)) |
 | Shift + Tab | Decrease indent &mdash; un-nests a list item, moves to the previous table cell, or removes block indent ([details](#lists--indentation)) |
 | Esc, then Tab | Move focus to the next element outside the editor (keyboard escape) |
