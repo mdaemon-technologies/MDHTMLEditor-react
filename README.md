@@ -19,7 +19,7 @@ npm install @mdaemon/html-editor-react
 **Peer dependencies:** `react` and `react-dom` (v18 or v19).
 
 **TipTap:** the editor is built on TipTap 3, and this package tracks the same version the
-engine uses &mdash; currently **3.32.0** (`@mdaemon/html-editor` `^1.14.0`,
+engine uses &mdash; currently **3.32.0** (`@mdaemon/html-editor` `^1.16.0`,
 `@tiptap/react` `^3.32.0`). If your app depends on any `@tiptap/*` package directly, keep
 it on that version too: ProseMirror throws at runtime if two copies of `@tiptap/core` /
 `@tiptap/pm` end up in the bundle. If you only use `<Editor>` or `useEditor`, there is
@@ -233,7 +233,7 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `height` | `string \| number` | `300` | Editor height. |
 | `min_height` | `string \| number` | &mdash; | Minimum editor height. |
 | `max_height` | `string \| number` | &mdash; | Maximum editor height. |
-| `language` | `string` | `'en'` | UI language code. 31 languages built in. |
+| `language` | `string` | `'en'` | UI language code. 32 languages built in &mdash; see [Supported Languages](#supported-languages). |
 | `skin` | `'oxide' \| 'oxide-dark' \| 'confab' \| 'confab-dark'` | `'oxide'` | Toolbar and dialog theme. |
 | `content_css` | `'default' \| 'dark' \| 'confab' \| 'confab-dark'` | `'default'` | Content area theme. |
 | `content_style` | `string` | &mdash; | Custom CSS injected into the editing surface. |
@@ -246,7 +246,7 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `block_formats` | `string` | *(Paragraph + H1&ndash;H6)* | Block-format dropdown definitions for the `blocks` button (`Name=tag;...`). |
 | `style_formats` | `StyleFormat[]` | *(subset)* | Named styles for the `styles` dropdown (CKEditor `stylesSet`-compatible). |
 | `forced_root_block` | `'p' \| 'div'` | `'p'` | Block element produced on Enter. `'div'` gives CKEditor `ENTER_DIV` parity. |
-| `trailingNode` | `boolean` | `false` | Append an empty trailing paragraph after a block node (table, image, code block) so the cursor can sit after it. |
+| `trailingNode` | `boolean` | `false` | Append an empty trailing paragraph after a block node (table, code block) so the cursor can sit after it. |
 | `directionality` | `'ltr' \| 'rtl'` | `'ltr'` | Text direction. |
 | `toolbar` | `string` | *(preset)* | Custom toolbar layout string. |
 | `toolbar_mode` | `'sliding' \| 'floating' \| 'wrap'` | `'wrap'` | Toolbar overflow behavior. |
@@ -258,6 +258,8 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `quickbars_selection_toolbar` | `string` | `'bold italic \| quicklink blockquote'` | Inline floating toolbar shown over a text selection. |
 | `quickbars_image_toolbar` | `boolean` | `false` | Inline floating toolbar shown when an image is selected. |
 | `quickbars_insert_toolbar` | `boolean` | `false` | Inline floating toolbar shown on empty lines for quick insertion. |
+| `object_resizing` | `boolean \| string` | `true` | Show drag handles on a selected image to resize it. `false` turns resizing off; a CSS selector string (TinyMCE-style, e.g. `'img[alt]'`) limits it to the images that match &mdash; see [Resizing Images](#resizing-images). |
+| `resize_img_proportional` | `boolean` | `true` | Corner handles keep the image's aspect ratio. Holding Shift while dragging does the opposite for that drag. |
 | `elementpath` | `boolean` | `false` | Show a breadcrumb of the node path at the cursor in the status bar. |
 | `valid_children` | `string` | &mdash; | TinyMCE-style rules controlling which child elements are allowed. |
 | `auto_focus` | `string` | &mdash; | Auto-focus on init. |
@@ -267,6 +269,7 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `entity_encoding` | `'raw' \| 'named' \| 'numeric'` | `'raw'` | HTML entity encoding mode. |
 | `paste_from_office` | `boolean` | `true` | Clean and preserve formatting when pasting from Microsoft Word/Excel. Pasted list indentation is normalized either way &mdash; see [Lists & Indentation](#lists--indentation). |
 | `paste_markdown` | `boolean` | `false` | Start with paste-as-Markdown on, so a paste is read as Markdown and inserted as real formatting. Toggle at runtime via `getEditor()?.setPasteMarkdown()` or the `pastemarkdown` toolbar button &mdash; see [Pasting Markdown](#pasting-markdown). |
+| `quote_marker_class` | `string` | &mdash; | Class that marks a reply's quoted original. A `<blockquote>` or `<div>` whose class is exactly this value keeps the class and its margin, padding and border in `getContent()`, so the quote can be found again. One class name; off when unset or empty. See the [engine docs](https://github.com/mdaemon-technologies/MDHTMLEditor#quoted-original-of-a-reply). |
 | `speech_to_text` | `boolean` | `true` | Enable the `speechtotext` and `dictate` toolbar buttons (requires the Web Speech API). |
 | `convert_unsafe_embeds` | `boolean` | `true` | Sanitize embedded content. |
 | `format_empty_lines` | `boolean` | `true` | Preserve blank lines outside the editor. On the way out (`getContent()`, the `onChange` payload, preview, and the source dialog) each empty block is filled with a `<br>` &mdash; bare empty blocks otherwise collapse to zero height in mail clients; on the way in (`setContent()`, `insertContent()`, templates) it is stripped back out, so `setContent(getContent(x))` is stable across round-trips. A block is only "empty" if it has no visible content &mdash; a `<div>&nbsp;</div>` spacer counts as content and is left alone. Set `false` to pass content through unchanged in both directions. |
@@ -281,6 +284,7 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `images_file_types` | `string` | *(permissive)* | Comma/space-separated accepted extensions (e.g. `'jpg,jpeg,png,gif'`). |
 | `images_upload_validate` | `(file: File) => string \| null` | &mdash; | Pre-upload hook; return a message to reject the file, or `null` to allow. |
 | `images_upload_error` | `(message: string) => void` | &mdash; | Caller-supplied alert for drag-drop/paste upload rejections and failures. |
+| `images_upload_error_message` | `(response: unknown, status: number) => string \| null \| undefined` | &mdash; | Words the message for a failed upload from the server's reply (parsed JSON body, or `null`, and the HTTP status). Return `null`/`undefined` for the editor's own translated message &mdash; see [Image Upload](#image-upload). |
 | `setup` | `(editor) => void` | &mdash; | Pre-init callback for registering custom toolbar buttons. |
 
 ### Dark Theme
@@ -726,6 +730,44 @@ SVGs are automatically sanitized (script tags, event handlers, and dangerous ele
 />
 ```
 
+Upload failures are shown in the editor's language. When your server explains a refusal in its reply, `images_upload_error_message` lets you word the message yourself. It receives the parsed JSON body (`null` when the body is not JSON) and the HTTP status, and returns the message to show, or `null`/`undefined` to keep the editor's own. It is not called for a network error or an aborted request. The message is shown in the image dialog, and passed to `images_upload_error` for a dropped or pasted image.
+
+```tsx
+<Editor
+  config={{
+    images_upload_url: '/api/upload',
+    // The server answers a refusal with HTTP 200 and {"error": "<reason>"}
+    images_upload_error_message: (response) => {
+      const error = (response as { error?: unknown } | null)?.error;
+      return typeof error === 'string' ? error : null;
+    },
+    images_upload_error: (message) => showAlert(message),
+  }}
+/>
+```
+
+### Resizing Images
+
+Click an image in the full editor to select it, and drag one of the eight handles to resize it. Corners keep the aspect ratio (hold Shift to stretch freely), sides change only the width or the height, and Escape cancels the drag. The new size is saved in the image's `width` and `height` attributes, as TinyMCE does, as one undo step that fires `onDirty` and `onChange` like any other edit. Handles are hidden in read-only mode.
+
+Resizing is on by default. Set `object_resizing: false` to turn it off, or pass a CSS selector to allow it only for the images that match. The `objectresizestart` and `objectresized` events have no props; register them on the editor in `onInit`:
+
+```tsx
+<Editor
+  config={{
+    object_resizing: 'img[alt]',   // or true (default) / false
+    resize_img_proportional: true, // corners keep the aspect ratio (default)
+  }}
+  onInit={(editor) => {
+    editor.on('objectresized', ({ width, height }) => {
+      console.log(`Image resized to ${width} × ${height}`);
+    });
+  }}
+/>
+```
+
+Images are inline, as in TinyMCE and mail HTML: a link around an image is kept, and an `<img>` that is not already in a line of text is put in a `<p>` (or a `<div>` with `forced_root_block: 'div'`).
+
 ## Localization
 
 ### Set Language at Init
@@ -745,6 +787,8 @@ setTranslate((key) => myTranslations[key] ?? key);
 <Editor translate={(key) => myTranslations[key] ?? key} config={{}} />
 ```
 
+The built-in locale is the fallback: when your function returns an empty string (or, through `setTranslate()`, `null` or `undefined`), the editor shows its own translation for that key. A custom function therefore only needs the strings it wants to change. Keys with a placeholder, such as `Upload failed: {status}` and `Confidence: {percent}%`, must keep it in the translation.
+
 ### Change Language at Runtime
 
 ```tsx
@@ -753,6 +797,8 @@ const editorRef = useRef<EditorRef>(null);
 // Switch to French
 editorRef.current?.getEditor()?.setLanguage('fr');
 ```
+
+`setLanguage()` keeps a custom translate function; it changes only the fallback locale.
 
 ### Supported Languages
 
@@ -764,15 +810,15 @@ editorRef.current?.getEditor()?.setLanguage('fr');
 | `zh` | Chinese | `pt` | Portugues |
 | `cs` | Cesky | `ro` | Romana |
 | `da` | Dansk | `ru` | Russian |
-| `en-gb` | English (UK) | `sr` | Srpski |
-| `fi` | Suomi | `sl` | Slovenscina |
-| `fr` | Francais | `es` | Espanol |
-| `fr-ca` | Canadien francais | `sv` | Svenska |
-| `de` | Deutsch | `zh-tw` | Chinese (Taiwan) |
-| `el` | Greek | `th` | Thai |
-| `hu` | Magyar | `tr` | Turkce |
-| `id` | Bahasa Indonesia | `vi` | Tieng Viet |
-| `it` | Italiano | | |
+| `en-gb` | English (UK) | `sr` | Srpski (Cyrillic) |
+| `fi` | Suomi | `sr-latn` | Srpski (latinica) |
+| `fr` | Francais | `sl` | Slovenscina |
+| `fr-ca` | Canadien francais | `es` | Espanol |
+| `de` | Deutsch | `sv` | Svenska |
+| `el` | Greek | `zh-tw` | Chinese (Taiwan) |
+| `hu` | Magyar | `th` | Thai |
+| `id` | Bahasa Indonesia | `tr` | Turkce |
+| `it` | Italiano | `vi` | Tieng Viet |
 | `ja` | Japanese | | |
 | `ko` | Korean | | |
 

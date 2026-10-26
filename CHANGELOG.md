@@ -5,6 +5,86 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-10-26
+
+Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or
+component behavior. The minor bump reflects the image resizing, marked quote, upload-message
+and translation features inherited from the engine. They are set through the `config` prop (or
+`useEditor`'s `config` option) or reached through `getEditor()` and `onInit`. Their
+extensions and types (`ResizableImage`, `MarkedQuote`, `ObjectResizeEvent`,
+`CustomTranslateFunction`, ...) are exported from `@mdaemon/html-editor`, not re-exported
+from this package.
+
+### Added
+
+Inherited from the underlying `@mdaemon/html-editor` 1.15.0 and 1.16.0 upgrade:
+
+- **Image resizing with drag handles.** Selecting an image in the full editor shows eight
+  handles: corners keep the aspect ratio (Shift stretches freely), sides change only the
+  width or the height, and Escape cancels a drag. The new size is saved in the image's
+  `width` and `height` attributes, as one undo step that marks the editor dirty and fires
+  `change`, so `onDirty` and `onChange` see it like any other edit. Handles are hidden in
+  read-only mode.
+- **`object_resizing` and `resize_img_proportional` options** (TinyMCE names, both default
+  `true`). `object_resizing: false` turns image resizing off; a CSS selector string limits
+  it to the images that match. `resize_img_proportional: false` makes corners stretch freely,
+  with Shift keeping the ratio.
+- **`objectresizestart` and `objectresized` events**, each receiving
+  `{ target, width, height, handle }`. There are no props for them; register them on the
+  editor from `onInit` (or `useEditor`'s `editor`).
+- **`quote_marker_class` option.** Names the class a host uses to mark the quoted original of
+  a reply or forward. A `<blockquote>` or `<div>` whose class is exactly that value keeps the
+  class and its margin, padding and border in `getContent()`, so the quote can be found
+  again. Off by default.
+- **`images_upload_error_message` option.** Words the message for a failed upload from the
+  server's reply (the parsed JSON body and the HTTP status), so a server that refuses an
+  upload with HTTP 200 and `{"error": "..."}` can show its own reason.
+- **`sr-latn` locale** (Serbian, Latin script). `sr` stays Cyrillic.
+- **Translated upload and file-read failure messages**, with new translation keys for them.
+  `Upload failed: {status}` and `Confidence: {percent}%` take a placeholder; a custom
+  translate function that supplies those keys must keep it.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.16.0` (from `^1.14.0`). `@tiptap/react` stays at
+  `^3.32.0` &mdash; 1.15.0 and 1.16.0 do not move TipTap.
+- Inherited from html-editor 1.16.0: **image resizing is on by default.** Existing editors
+  show resize handles with no config change; set `object_resizing: false` to keep the
+  previous behavior.
+- Inherited from html-editor 1.16.0: **images are shown at their `width` and `height`
+  attributes**, so a stretched image looks in the editor as it will in a mail client. An
+  image wider than the editor is scaled down to fit.
+- Inherited from html-editor 1.16.0: **images are inline.** An `<img>` that is not already in
+  a line of text (top level, or directly in a table cell, list item, quote or signature) is
+  put in a `<p>` (or a `<div>` with `forced_root_block: 'div'`), which changes
+  `getContent()` output for such content.
+- Inherited from html-editor 1.15.0: **the built-in locale is the fallback for a custom
+  translate function.** A string the `translate` prop or `setTranslate()` returns empty
+  (or `null`/`undefined`) now shows the built-in translation instead of a blank, so a custom
+  function only needs the strings it wants to change. `setLanguage()` now keeps the custom
+  function and changes only the fallback locale.
+- Inherited from html-editor 1.15.0: the Find and Replace dialog's labels no longer end in a
+  colon, and the `Confidence` translation key is deprecated in favor of
+  `Confidence: {percent}%`.
+- Inherited from html-editor 1.15.0: the upload URL is the first of `location`, `url` and
+  `link` that is a non-empty string, so a non-string `location` no longer hides a usable
+  `url` or `link`.
+
+### Fixed
+
+Inherited from the underlying `@mdaemon/html-editor` 1.15.0 and 1.16.0 upgrade:
+
+- **Linked images keep their link.** An image inside `<a href>` lost the link when loaded,
+  pasted or inserted, and an image between words split its paragraph. The Link dialog and
+  `unlink` now work on a selected image.
+- **The image dialog's Insert button works again after a failed upload**, so a retry no
+  longer means picking the file again.
+- **Dropped and pasted image failure messages follow `setLanguage()`.**
+- **Untranslated, garbled and mistranslated strings.** Nine strings (the Link dialog, the
+  Save buttons and two speech errors) are now translated, Speech-to-Text and Insert-button
+  text that showed question marks or lost accents in most locales is restored, and wrong or
+  unnatural wording is corrected in 24 locales.
+
 ## [1.10.0] - 2026-10-22
 
 Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or
@@ -724,6 +804,8 @@ underlying `@mdaemon/html-editor` 1.5.0 upgrade:
 - Demo app (`npm run demo`)
 - Full test suite with Jest + @testing-library/react
 
+[1.11.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.11.0
+[1.10.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.10.0
 [1.9.1]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.9.1
 [1.9.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.9.0
 [1.8.4]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.8.4
