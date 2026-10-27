@@ -5,6 +5,85 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-10-27
+
+Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or
+component behavior. The minor bump reflects the table editing and image map features
+inherited from the engine. They are set through the `config` prop (or `useEditor`'s
+`config` option) or reached through `getEditor()` and `onInit`. Their extensions, classes
+and types (`ImageMap`, `TableCommands`, `StyledTable`, `TableModifiedEvent`, ...) are
+exported from `@mdaemon/html-editor`, not re-exported from this package.
+
+### Added
+
+Inherited from the underlying `@mdaemon/html-editor` 1.17.0 upgrade:
+
+- **Table menu.** The `table` toolbar button now opens TinyMCE's table menu: Insert table
+  (a 10×10 size grid, or the Insert table dialog with `table_grid: false`), Cell, Row and
+  Column submenus, Table properties, Toggle caption and Delete table. Items that cannot
+  apply are disabled, and the menu works with the keyboard.
+- **Table, Row and Cell properties dialogs, and an Insert table dialog**, each with an
+  Advanced tab for borders and background color.
+- **Row and column clipboard, header rows, header columns and cell types.** Cut, copy and
+  paste whole rows and columns, and toggle rows, columns or cells between header and data
+  cells.
+- **Table toolbar buttons** under TinyMCE's names (`tableprops`, `tabledelete`,
+  `tableinsertrowbefore`, `tablemergecells`, `tablecellbackgroundcolor`, ...), usable in the
+  `toolbar` string.
+- **Table context toolbar** (`table_toolbar`). A toolbar floats above a table while the
+  cursor is in it. `table_toolbar` sets its buttons, and `false` turns it off. Off by
+  default in the basic editor.
+- **Right-click table menu.** `contextmenu: 'table'` (or `true`) opens the table menu on a
+  right-click in a table. Off by default. The `contextmenu` option was accepted before but
+  did nothing.
+- **Table commands.** `getEditor()?.execCommand(command, false, value)` runs TinyMCE's table commands
+  (`mceInsertTable`, `mceTableInsertRowAfter`, `mceTableMergeCells`,
+  `mceTableApplyCellStyle`, ...), returning `false` when a command did not apply. The new
+  `queryCommandValue()` and `isTableCommandEnabled()` editor methods read row, column and
+  cell types and tell whether a command would apply.
+- **`tablemodified`, `newrow` and `newcell` events.** There are no props for them; register
+  them on the editor from `onInit` (or `useEditor`'s `editor`).
+- **Table options** under TinyMCE's names: `table_toolbar`, `table_grid`,
+  `table_default_attributes`, `table_default_styles`, `table_default_header_rows`,
+  `table_default_header_cols`, `table_tab_navigation`, `table_appearance_options`,
+  `table_advtab`, `table_row_advtab`, `table_cell_advtab`, `table_border_widths`,
+  `table_border_styles`, `table_background_color_map` and `table_border_color_map`.
+- **Translation keys** for the table menu, buttons and dialogs, and for the image map
+  marker, translated in every locale.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.17.0` (from `^1.16.0`). `@tiptap/react` stays at
+  `^3.32.0` &mdash; 1.17.0 does not move TipTap.
+- Inherited from html-editor 1.17.0: **a new table has borders in the saved HTML and no
+  header row.** It is inserted with `border="1"` and `border-collapse: collapse; width: 100%`,
+  so its borders show in mail clients. The table dropdown used to insert a 3×3 table with a
+  header row; set `table_default_header_rows: 1` to keep one.
+- Inherited from html-editor 1.17.0: **Toggle header row and Toggle header column act on the
+  current row or column**, instead of always the first.
+- Inherited from html-editor 1.17.0: **deleting the last row or column deletes the table**,
+  as in TinyMCE. It used to do nothing.
+- Inherited from html-editor 1.17.0: `table_tab_navigation: false` makes Tab and Shift+Tab in
+  a table indent the paragraph in the cell. The default is unchanged.
+
+### Fixed
+
+Inherited from the underlying `@mdaemon/html-editor` 1.17.0 upgrade:
+
+- **Image maps are kept.** An `<img usemap>` and its `<map>` and `<area>` hotspots were
+  dropped from `getContent()`. The full editor now keeps them, with their values checked.
+  While editing, a map shows as a small marker, and its hotspots work only in the saved HTML.
+  An image with a map has no resize handles.
+- **Tables keep their formatting.** A table's `border`, `cellpadding`, `cellspacing`, sizes,
+  alignment, backgrounds and borders, and its rows' and cells' styles were dropped; they are
+  now kept, with values checked. The legacy `bgcolor`, `valign`, `width`, `height` and
+  `align` attributes common in email are read too, and cell shading and borders pasted from
+  Word and Excel are kept.
+- **A table caption stays a caption** instead of becoming an extra first row.
+- **Cell selections are highlighted, and column borders show they can be dragged.**
+- **Column resizing works after `setReadOnly(false)`** on an editor created read-only.
+- **Merging whole rows leaves no empty `<tr>` behind.**
+
 ## [1.11.0] - 2026-10-26
 
 Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or

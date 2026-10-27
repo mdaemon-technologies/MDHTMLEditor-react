@@ -19,7 +19,7 @@ npm install @mdaemon/html-editor-react
 **Peer dependencies:** `react` and `react-dom` (v18 or v19).
 
 **TipTap:** the editor is built on TipTap 3, and this package tracks the same version the
-engine uses &mdash; currently **3.32.0** (`@mdaemon/html-editor` `^1.16.0`,
+engine uses &mdash; currently **3.32.0** (`@mdaemon/html-editor` `^1.17.0`,
 `@tiptap/react` `^3.32.0`). If your app depends on any `@tiptap/*` package directly, keep
 it on that version too: ProseMirror throws at runtime if two copies of `@tiptap/core` /
 `@tiptap/pm` end up in the bundle. If you only use `<Editor>` or `useEditor`, there is
@@ -254,7 +254,14 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `toolbar_narrow_breakpoint` | `number` | &mdash; | Pixel width below which the toolbar collapses into the overflow toggle. |
 | `toolbar_priority` | `Record<string, number>` | &mdash; | Per-button overflow priority &mdash; higher values stay visible longer as the toolbar narrows. |
 | `menubar` | `boolean` | `false` | Show a TinyMCE-style menu bar above the toolbar. |
-| `contextmenu` | `boolean \| string` | `''` | Enable a right-click context menu. Pass a button-list string to customize its contents. |
+| `contextmenu` | `boolean \| string` | `''` | Right-click menu. A string naming `table` (or `true`) opens the table menu on a right-click in a table. Off by default, because it replaces the browser's menu and its spelling suggestions &mdash; see [Tables](#tables). |
+| `table_toolbar` | `string \| false` | *(TinyMCE defaults)* | Buttons of the toolbar that floats above a table while the cursor is in it, as a toolbar string. `false` turns it off. Off by default in the basic editor. |
+| `table_grid` | `boolean` | `true` | Insert tables from a size grid in the table menu. `false` opens the Insert table dialog instead. |
+| `table_default_attributes` | `Record<string, string>` | `{ border: '1' }` | Attributes of a table the user inserts (`border`, `cellpadding`, `cellspacing`). |
+| `table_default_styles` | `Record<string, string>` | `{ 'border-collapse': 'collapse', width: '100%' }` | Style of a table the user inserts. |
+| `table_default_header_rows` | `number` | `0` | Header rows of an inserted table. |
+| `table_default_header_cols` | `number` | `0` | Header columns of an inserted table. |
+| `table_tab_navigation` | `boolean` | `true` | Tab and Shift+Tab move between table cells. `false` makes them indent the paragraph in the cell. |
 | `quickbars_selection_toolbar` | `string` | `'bold italic \| quicklink blockquote'` | Inline floating toolbar shown over a text selection. |
 | `quickbars_image_toolbar` | `boolean` | `false` | Inline floating toolbar shown when an image is selected. |
 | `quickbars_insert_toolbar` | `boolean` | `false` | Inline floating toolbar shown on empty lines for quick insertion. |
@@ -286,6 +293,8 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `images_upload_error` | `(message: string) => void` | &mdash; | Caller-supplied alert for drag-drop/paste upload rejections and failures. |
 | `images_upload_error_message` | `(response: unknown, status: number) => string \| null \| undefined` | &mdash; | Words the message for a failed upload from the server's reply (parsed JSON body, or `null`, and the HTTP status). Return `null`/`undefined` for the editor's own translated message &mdash; see [Image Upload](#image-upload). |
 | `setup` | `(editor) => void` | &mdash; | Pre-init callback for registering custom toolbar buttons. |
+
+The table dialogs and pickers have further options (`table_appearance_options`, `table_advtab`, `table_row_advtab`, `table_cell_advtab`, `table_border_widths`, `table_border_styles`, `table_background_color_map`, `table_border_color_map`) &mdash; see the [engine docs](https://github.com/mdaemon-technologies/MDHTMLEditor#tables).
 
 ### Dark Theme
 
@@ -329,7 +338,7 @@ Opt into the additional editing surfaces exposed by `@mdaemon/html-editor` 1.6.0
 <Editor
   config={{
     menubar: true,                  // menu bar above the toolbar
-    contextmenu: true,              // right-click context menu
+    contextmenu: 'table',           // right-click table menu in a table
     quickbars_selection_toolbar: 'bold italic | quicklink blockquote',
     quickbars_image_toolbar: true,  // floating toolbar when an image is selected
     elementpath: true,              // breadcrumb status bar at the cursor
@@ -337,7 +346,8 @@ Opt into the additional editing surfaces exposed by `@mdaemon/html-editor` 1.6.0
 />
 ```
 
-`contextmenu` also accepts a button-list string to customize its contents, and
+`contextmenu` replaces the browser's menu (and its spelling suggestions) only for a
+right-click in a table; Ctrl+right-click still shows the browser's menu.
 `quickbars_insert_toolbar` shows a floating insert toolbar on empty lines.
 
 ### Read-Only Mode
@@ -438,7 +448,7 @@ The `indent` / `outdent` toolbar buttons, `execCommand('indent' | 'outdent')`, a
 | Paragraph, heading | Adds a `margin-left` in 40px steps (max 400px) | Removes one step |
 | Code block | Inserts a literal tab | Nothing |
 
-Inside a list the indent is written to the `<li>` rather than to the paragraph inside it, so the bullet or number moves with the text. Because it is an inline `margin-left`, it survives in the exported HTML &mdash; in a mail client, say &mdash; without the editor's stylesheet. In a table, <kbd>Tab</kbd> still moves between cells; the toolbar buttons indent the paragraph in the cell.
+Inside a list the indent is written to the `<li>` rather than to the paragraph inside it, so the bullet or number moves with the text. Because it is an inline `margin-left`, it survives in the exported HTML &mdash; in a mail client, say &mdash; without the editor's stylesheet. In a table, <kbd>Tab</kbd> still moves between cells (unless `table_tab_navigation: false`); the toolbar buttons indent the paragraph in the cell.
 
 ### Ordered List Numbering
 
@@ -691,7 +701,12 @@ Buttons after `||` begin collapsed behind a toggle (`...`) button.
 | `undo` | Undo |
 | `redo` | Redo |
 | `image` | Insert image (upload or URL) |
-| `table` | Table dropdown (insert table + row/column/cell operations) |
+| `table` | Table menu: Insert table size grid, Cell / Row / Column submenus, Table properties, caption and Delete table (see [Tables](#tables)) |
+| `tableinsertdialog`, `tableprops`, `tabledelete`, `tablecellprops`, `tablerowprops`, `tablemergecells`, `tablesplitcells` | Insert table dialog, properties dialogs, delete table, merge and split cells |
+| `tableinsertrowbefore`, `tableinsertrowafter`, `tabledeleterow`, `tableinsertcolbefore`, `tableinsertcolafter`, `tabledeletecol` | Insert and delete rows and columns |
+| `tablecutrow`, `tablecopyrow`, `tablepasterowbefore`, `tablepasterowafter`, `tablecutcol`, `tablecopycol`, `tablepastecolbefore`, `tablepastecolafter` | Row and column clipboard |
+| `tablecaption`, `tablerowheader`, `tablecolheader` | Toggle caption, header row, header column |
+| `tablecellvalign`, `tablecellborderwidth`, `tablecellborderstyle`, `tablecellbackgroundcolor`, `tablecellbordercolor` | Cell vertical alignment, border and background menus and pickers |
 | `hr` | Insert horizontal rule |
 | `charmap` | Special character picker |
 | `emoticons` | Emoji picker with search |
@@ -767,6 +782,41 @@ Resizing is on by default. Set `object_resizing: false` to turn it off, or pass 
 ```
 
 Images are inline, as in TinyMCE and mail HTML: a link around an image is kept, and an `<img>` that is not already in a line of text is put in a `<p>` (or a `<div>` with `forced_root_block: 'div'`).
+
+### Image Maps
+
+In the full editor, an `<img usemap="#name">` and its `<map name="name">` with the `<area>` hotspots are kept through loading, `insertContent()`, paste and the Source view, with their values checked (an area `href` gets the same check as a link's). While editing, a map is shown as a small marker and its hotspots do nothing; they work in the saved HTML. Maps have no toolbar button &mdash; edit them in the Source view. An image with a map has no resize handles. The basic editor has no images, so it drops maps. See the [engine docs](https://github.com/mdaemon-technologies/MDHTMLEditor#image-maps) for what is kept.
+
+## Tables
+
+Table editing follows TinyMCE's table plugin. The `table` toolbar button opens the table menu: Insert table (a 10×10 size grid, or a dialog with `table_grid: false`), Cell, Row and Column submenus, Table properties, Toggle caption and Delete table. The [table buttons](#available-toolbar-buttons) can also go in the `toolbar` string. While the cursor is in a table, a context toolbar floats above it (`table_toolbar`), and `contextmenu: 'table'` adds a right-click table menu.
+
+A new table is inserted with `border="1"` and `border-collapse: collapse; width: 100%`, so its borders show in mail clients, and with no header row unless `table_default_header_rows` / `table_default_header_cols` ask for one. Tables keep their borders, padding, spacing, sizes, alignment, backgrounds and caption in `getContent()`, including the legacy `bgcolor`, `valign`, `width`, `height` and `align` attributes common in email.
+
+Table commands, queries and events have no props; reach them through the editor from `onInit` or `getEditor()`:
+
+```tsx
+<Editor
+  config={{
+    table_toolbar: 'tableprops tabledelete | tableinsertrowafter tabledeleterow',
+    table_default_header_rows: 1,
+    contextmenu: 'table',
+  }}
+  onInit={(editor) => {
+    editor.on('tablemodified', ({ table, structure, style }) => {
+      console.log('Table changed', { structure, style });
+    });
+  }}
+/>
+
+// Later, from a ref
+const editor = editorRef.current?.getEditor();
+editor?.execCommand('mceInsertTable', false, { rows: 3, columns: 4 });
+editor?.isTableCommandEnabled('mceTableMergeCells'); // would merging apply?
+editor?.queryCommandValue('mceTableCellType');      // 'th', 'td', or '' outside a table
+```
+
+A table command returns `false` when it did not apply (outside a table, read-only, or nothing to do). See the [engine docs](https://github.com/mdaemon-technologies/MDHTMLEditor#tables) for every command, dialog, and the formatting a table keeps.
 
 ## Localization
 
@@ -846,7 +896,7 @@ setGetFileSrc((path) => `https://cdn.example.com${path}`);
 | Ctrl/Cmd + Shift + Z | Redo |
 | Ctrl/Cmd + F | Find & Replace |
 | Ctrl + Alt + C (Cmd + Option + C on macOS) | Toggle code sample |
-| Tab | Increase indent &mdash; nests or indents a list item, moves to the next table cell, inserts a tab in a code block, or indents the block ([details](#lists--indentation)) |
+| Tab | Increase indent &mdash; nests or indents a list item, moves to the next table cell (unless `table_tab_navigation: false`), inserts a tab in a code block, or indents the block ([details](#lists--indentation)) |
 | Shift + Tab | Decrease indent &mdash; un-nests a list item, moves to the previous table cell, or removes block indent ([details](#lists--indentation)) |
 | Esc, then Tab | Move focus to the next element outside the editor (keyboard escape) |
 | Esc, then Shift + Tab | Move focus to the previous element outside the editor |
