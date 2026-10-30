@@ -19,7 +19,7 @@ npm install @mdaemon/html-editor-react
 **Peer dependencies:** `react` and `react-dom` (v18 or v19).
 
 **TipTap:** the editor is built on TipTap 3, and this package tracks the same version the
-engine uses &mdash; currently **3.32.0** (`@mdaemon/html-editor` `^1.17.0`,
+engine uses &mdash; currently **3.32.0** (`@mdaemon/html-editor` `^1.18.0`,
 `@tiptap/react` `^3.32.0`). If your app depends on any `@tiptap/*` package directly, keep
 it on that version too: ProseMirror throws at runtime if two copies of `@tiptap/core` /
 `@tiptap/pm` end up in the bundle. If you only use `<Editor>` or `useEditor`, there is
@@ -261,7 +261,7 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `table_default_styles` | `Record<string, string>` | `{ 'border-collapse': 'collapse', width: '100%' }` | Style of a table the user inserts. |
 | `table_default_header_rows` | `number` | `0` | Header rows of an inserted table. |
 | `table_default_header_cols` | `number` | `0` | Header columns of an inserted table. |
-| `table_tab_navigation` | `boolean` | `true` | Tab and Shift+Tab move between table cells. `false` makes them indent the paragraph in the cell. |
+| `table_tab_navigation` | `boolean` | `true` | Tab and Shift+Tab move between table cells. `false` makes them work in a cell as they do outside a table: Tab types a tab at the cursor, and Shift+Tab outdents. |
 | `quickbars_selection_toolbar` | `string` | `'bold italic \| quicklink blockquote'` | Inline floating toolbar shown over a text selection. |
 | `quickbars_image_toolbar` | `boolean` | `false` | Inline floating toolbar shown when an image is selected. |
 | `quickbars_insert_toolbar` | `boolean` | `false` | Inline floating toolbar shown on empty lines for quick insertion. |
@@ -439,7 +439,7 @@ tiptap?.chain().focus().setBlockFontSize('14pt').run();
 
 ### Increase / Decrease Indent
 
-The `indent` / `outdent` toolbar buttons, `execCommand('indent' | 'outdent')`, and the <kbd>Tab</kbd> / <kbd>Shift</kbd>+<kbd>Tab</kbd> keys all resolve to the same behavior, chosen by what is under the cursor:
+The `indent` / `outdent` toolbar buttons, `execCommand('indent' | 'outdent')`, and the <kbd>Tab</kbd> / <kbd>Shift</kbd>+<kbd>Tab</kbd> keys all resolve to the same behavior, chosen by what is under the cursor (with one exception for <kbd>Tab</kbd> &mdash; see [Tab Characters](#tab-characters)):
 
 | Context | Increase indent | Decrease indent |
 |---------|-----------------|-----------------|
@@ -449,6 +449,14 @@ The `indent` / `outdent` toolbar buttons, `execCommand('indent' | 'outdent')`, a
 | Code block | Inserts a literal tab | Nothing |
 
 Inside a list the indent is written to the `<li>` rather than to the paragraph inside it, so the bullet or number moves with the text. Because it is an inline `margin-left`, it survives in the exported HTML &mdash; in a mail client, say &mdash; without the editor's stylesheet. In a table, <kbd>Tab</kbd> still moves between cells (unless `table_tab_navigation: false`); the toolbar buttons indent the paragraph in the cell.
+
+<kbd>Backspace</kbd> at the start of an indented paragraph or heading removes one indent step, instead of joining the line to the one above. An empty line is still removed in one press.
+
+### Tab Characters
+
+In a paragraph or heading, <kbd>Tab</kbd> with nothing selected types a tab at the cursor, wherever it is in the line, as a word processor does. To indent the whole paragraph, select text in it first, or use the `indent` button. In a list, a code block or a table, <kbd>Tab</kbd> works as described above; with `table_tab_navigation: false`, <kbd>Tab</kbd> in a cell types a tab too.
+
+A tab is written as `<span style="white-space: pre;">&#9;</span>`, the form other editors use, so it keeps its tab stops in exported HTML instead of collapsing to a space. `setContent()`, `insertContent()` and paste read that span back as a tab, as well as tabs in `white-space: pre-wrap` text (as Google Docs writes) and in pasted plain text. A tab is one character: one <kbd>Backspace</kbd> or <kbd>Delete</kbd> removes it, and one undo takes it back. See the [engine docs](https://github.com/mdaemon-technologies/MDHTMLEditor#tab-characters) for the details.
 
 ### Ordered List Numbering
 
@@ -709,7 +717,7 @@ Buttons after `||` begin collapsed behind a toggle (`...`) button.
 | `tablecellvalign`, `tablecellborderwidth`, `tablecellborderstyle`, `tablecellbackgroundcolor`, `tablecellbordercolor` | Cell vertical alignment, border and background menus and pickers |
 | `hr` | Insert horizontal rule |
 | `charmap` | Special character picker |
-| `emoticons` | Emoji picker with search |
+| `emoticons` | Emoji picker, searchable by English name and keywords, with each emoji's name as its tooltip |
 | `code` | Open HTML source code editor dialog |
 | `link` | Insert/edit hyperlink (with the caret on a link, edits that link in place) |
 | `unlink` | Remove the link at the cursor |
@@ -896,12 +904,13 @@ setGetFileSrc((path) => `https://cdn.example.com${path}`);
 | Ctrl/Cmd + Shift + Z | Redo |
 | Ctrl/Cmd + F | Find & Replace |
 | Ctrl + Alt + C (Cmd + Option + C on macOS) | Toggle code sample |
-| Tab | Increase indent &mdash; nests or indents a list item, moves to the next table cell (unless `table_tab_navigation: false`), inserts a tab in a code block, or indents the block ([details](#lists--indentation)) |
+| Tab | Types a tab at the cursor in a paragraph or heading ([details](#tab-characters)), indents the selected paragraphs when there is a selection, nests or indents a list item, inserts a tab in a code block, or moves to the next table cell (unless `table_tab_navigation: false`) ([details](#lists--indentation)) |
 | Shift + Tab | Decrease indent &mdash; un-nests a list item, moves to the previous table cell, or removes block indent ([details](#lists--indentation)) |
+| Backspace | Removes a tab in one press. At the start of an indented paragraph or heading, removes one indent step |
 | Esc, then Tab | Move focus to the next element outside the editor (keyboard escape) |
 | Esc, then Shift + Tab | Move focus to the previous element outside the editor |
 
-> `Tab` is captured for indentation, so the `Esc`-then-`Tab` sequence provides a
+> `Tab` is captured by the editor, so the `Esc`-then-`Tab` sequence provides a
 > keyboard escape (WCAG 2.1.2, "No Keyboard Trap"). `Esc` arms the escape for a single
 > key press; any other key disarms it.
 

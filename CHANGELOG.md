@@ -5,6 +5,52 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.0] - 2026-10-30
+
+Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or
+component behavior. From this release on, this package's version matches the
+`@mdaemon/html-editor` version it depends on, so it jumps from 1.12.0 to 1.18.0; there are
+no 1.13.0 to 1.17.0 releases. The new engine exports (`EMOJI_DATA`, `TabCharacter`) come
+from `@mdaemon/html-editor`, not re-exported from this package.
+
+### Added
+
+Inherited from the underlying `@mdaemon/html-editor` 1.18.0 upgrade:
+
+- **Emoji name tooltips.** Each emoji button in the picker shows the emoji's English name,
+  such as "grinning face", as its tooltip. The emoji itself stays the button's accessible
+  name.
+- **Translation key** `No emoticons found`, translated in every locale. The emoji picker
+  shows it when a search matches nothing.
+- **`EMOJI_DATA`** and the **`TabCharacter`** extension are exported from
+  `@mdaemon/html-editor`.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.18.0` (from `^1.17.0`). `@tiptap/react` stays at
+  `^3.32.0` &mdash; 1.18.0 does not move TipTap.
+- Version jumps to 1.18.0 to match `@mdaemon/html-editor`.
+- Inherited from html-editor 1.18.0: **Tab types a tab at the cursor** in a paragraph or
+  heading, instead of adding a left margin to the whole line. The tab is written as
+  `<span style="white-space: pre;">\t</span>`, so it keeps its tab stops in exported HTML,
+  and that span (and tabs in `white-space: pre-wrap` text or pasted plain text) is read back
+  as a tab. With a selection, Tab still indents the selected paragraphs, and lists, code
+  blocks and tables keep their own Tab. The `indent` button and `execCommand('indent')` still
+  indent the paragraph. With `table_tab_navigation: false`, Tab in a cell types a tab too.
+- Inherited from html-editor 1.18.0: **Backspace at the start of an indented paragraph or
+  heading removes one indent step**, instead of joining the line to the one above with the
+  indent left in place.
+
+### Fixed
+
+Inherited from the underlying `@mdaemon/html-editor` 1.18.0 upgrade:
+
+- **Backspace removes a tab in one press**, and one undo takes it back.
+- **Emoji picker search.** Typing in the search box showed every emoji, whatever the query.
+  It now shows only the emojis whose English name or keywords match each word of the query,
+  across all categories. A query that matches nothing says so, and reopening the picker
+  starts with an empty search.
+
 ## [1.12.0] - 2026-10-27
 
 Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or
