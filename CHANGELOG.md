@@ -5,6 +5,57 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.0] - 2026-11-10
+
+Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or
+component behavior. The new icon registry is reached through the editor passed to
+`config.setup`, and the new `skin` option on `EmojiPicker` and `CharacterMap` is part of
+`@mdaemon/html-editor`, not re-exported from this package.
+
+### Added
+
+Inherited from the underlying `@mdaemon/html-editor` 1.19.0 upgrade:
+
+- **`ui.registry.addIcon(name, svg)`** and **`ui.registry.getIcon(name)`**, as in TinyMCE,
+  on the editor passed to `config.setup`. A custom button's `icon` can be a registered icon
+  name, a built-in toolbar icon name such as `'link'`, or SVG markup given directly. Icon
+  markup is cleaned before it is drawn (only SVG drawing elements are kept; no script,
+  event handlers, links, animations or `<foreignObject>`), so an icon can't run script.
+- **`skin` option** on the engine's `EmojiPicker` and `CharacterMap`, for dialogs opened
+  outside an editor's toolbar. It defaults to `oxide`; the toolbar passes the editor's skin.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.19.0` (from `^1.18.0`). `@tiptap/react` stays at
+  `^3.32.0` &mdash; 1.19.0 does not move TipTap.
+- Version bumped to 1.19.0 to match `@mdaemon/html-editor`.
+- README: documented the icon registry and the accepted `icon` values, and noted that the
+  skin now reaches menus and dialogs.
+
+### Fixed
+
+Inherited from the underlying `@mdaemon/html-editor` 1.19.0 upgrade:
+
+- **Menus and dialogs follow the editor's skin.** The toolbar's dropdown menus (Format,
+  Styles, Font, Font size, Line height, Templates, Table), its color menus, the table
+  toolbar's menus, and the Emoticons, Special character, Insert image, Find and replace and
+  Speech to Text dialogs always showed light styles, whatever the `skin`. In `confab` this
+  also gives the menus their confab borders, corners and shadow.
+- **Dark styles for every dialog control** in `oxide-dark` and `confab-dark` (emoji search,
+  tabs and buttons, character map, find and replace fields, image dialog, dialog header),
+  with muted text lightened to stay readable.
+- **Dialogs use the editor's font and sizing** instead of the page's, so the emoji search
+  box no longer runs past the dialog's edge.
+- **Menu item hover.** Disabled menu items no longer take the hover background in
+  `oxide-dark`, `confab` and `confab-dark`, and in `oxide-dark` hovering a dropdown's
+  selected item no longer hides its highlight.
+- **Custom button icons follow the skin.** An SVG icon drawn with `currentColor` was always
+  drawn as an `<img>` and came out black in every skin. An icon given by name or as SVG
+  markup is now drawn inline and takes the button's text color; any other value is still
+  used as an image URL.
+- **Anchor dialog layout.** The Insert anchor dialog's name field, error and buttons now
+  match the link dialog in every skin.
+
 ## [1.18.0] - 2026-10-30
 
 Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or
@@ -929,6 +980,9 @@ underlying `@mdaemon/html-editor` 1.5.0 upgrade:
 - Demo app (`npm run demo`)
 - Full test suite with Jest + @testing-library/react
 
+[1.19.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.19.0
+[1.18.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.18.0
+[1.12.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.12.0
 [1.11.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.11.0
 [1.10.0]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.10.0
 [1.9.1]: https://www.npmjs.com/package/@mdaemon/html-editor-react/v/1.9.1

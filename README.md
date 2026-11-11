@@ -19,7 +19,7 @@ npm install @mdaemon/html-editor-react
 **Peer dependencies:** `react` and `react-dom` (v18 or v19).
 
 **TipTap:** the editor is built on TipTap 3, and this package tracks the same version the
-engine uses &mdash; currently **3.32.0** (`@mdaemon/html-editor` `^1.18.0`,
+engine uses &mdash; currently **3.32.0** (`@mdaemon/html-editor` `^1.19.0`,
 `@tiptap/react` `^3.32.0`). If your app depends on any `@tiptap/*` package directly, keep
 it on that version too: ProseMirror throws at runtime if two copies of `@tiptap/core` /
 `@tiptap/pm` end up in the bundle. If you only use `<Editor>` or `useEditor`, there is
@@ -306,6 +306,10 @@ The table dialogs and pickers have further options (`table_appearance_options`, 
   }}
 />
 ```
+
+The skin also reaches the toolbar's dropdown and color menus and the dialogs (emoji
+picker, special characters, insert image, find and replace, speech to text), even though
+they are added to `document.body` outside the editor.
 
 ### Confab Skin
 
@@ -615,15 +619,20 @@ carries:
 
 ## Custom Toolbar Buttons
 
-Register custom buttons via the `setup` callback in `config`:
+Register custom buttons via the `setup` callback in `config`, and SVG icons for them with
+`ui.registry.addIcon(name, svg)`:
 
 ```tsx
 <Editor
   config={{
     setup: (editor) => {
+      editor.ui.registry.addIcon(
+        'greet',
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>',
+      );
       editor.ui.registry.addButton('myButton', {
         tooltip: 'Insert greeting',
-        text: 'Greet',
+        icon: 'greet',
         onAction: (api) => {
           editor.insertContent('<p>Hello from a custom button!</p>');
         },
@@ -644,10 +653,27 @@ Register custom buttons via the `setup` callback in `config`:
 |--------|------|-------------|
 | `tooltip` | `string` | Hover text. |
 | `text` | `string` | Button label. |
-| `icon` | `string` | Image URL (used instead of text). |
+| `icon` | `string` | Icon shown instead of text: a name registered with `addIcon`, a built-in toolbar icon name such as `'link'`, SVG markup, or an image URL (see [Icons](#icons)). |
 | `disabled` | `boolean` | Initial disabled state. |
 | `onSetup` | `(api) => void \| (() => void)` | Called on creation; may return a teardown function. |
 | `onAction` | `(api) => void` | Called on click. |
+
+### Icons
+
+| Registry method | Description |
+|-----------------|-------------|
+| `ui.registry.addIcon(name, svg)` | Registers SVG markup under `name`, for use as a button's `icon`. A registered icon takes precedence over a built-in icon of the same name. |
+| `ui.registry.getIcon(name)` | Returns a registered icon's markup, or `undefined`. |
+
+An icon given by name or as SVG markup is drawn inline, like the built-in buttons' icons,
+so an SVG that uses `currentColor` takes the button's text color and follows the skin,
+including the dark ones. Any other `icon` value is used as an image URL and keeps its own
+colors in every skin, so use a URL only for icons with fixed colors, such as a logo.
+
+Icon markup is cleaned before it is drawn: only the `<svg>` and its drawing elements are
+kept, and script, event-handler attributes, links, animations and `<foreignObject>` are
+removed, so an icon can't run script. A button's `text` is inserted as HTML **without**
+cleaning &mdash; build it only from your own strings, never from user input.
 
 ### Button API
 
