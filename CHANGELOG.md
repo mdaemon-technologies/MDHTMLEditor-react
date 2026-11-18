@@ -5,6 +5,99 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.0] - 2026-11-17
+
+Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or
+component behavior. The new options go in the `config` prop (or `useEditor`'s `config`
+option), and the new commands, methods and events are reached through `getEditor()` and
+`onInit`. The new engine exports (`FormatPainter`, `PasteAsText`, `MediaDialog`,
+`ImageDialog`, `parseVideoUrl`, `MediaUrlResolver`, `VisualBlocksEvent`, ...) come from
+`@mdaemon/html-editor`, not re-exported from this package.
+
+### Added
+
+Inherited from the underlying `@mdaemon/html-editor` 1.20.0 upgrade. None of the new
+toolbar buttons is in a default toolbar; add them to a `toolbar` string.
+
+- **`selectall` button** and **`SelectAll` command**: select the whole document, as Ctrl+A
+  does.
+- **`print` button** and **`mcePrint` command**: print the content on its own, from a
+  sandboxed hidden frame (no popup). With the button in the toolbar, Ctrl+P (Cmd+P on
+  macOS) in the editor prints the content instead of the page.
+- **`visualblocks` button** and **`mceVisualBlocks` command** (Show blocks): a dashed,
+  tag-labelled outline around each block while editing; `getContent()` is unchanged. With
+  the `visualblocks_default_state` option, `isVisualBlocksEnabled()` /
+  `setVisualBlocks(on)` and a `visualblocks` event (`{ state }`) for saving the user's
+  choice.
+- **`formatpainter` button** and the **`mceToggleFormatPainter`, `mceRetrieveFormats` and
+  `mcePaintFormats` commands** (Format Painter): copy one piece of text's inline
+  formatting and paint it onto another. A double-click on the button keeps painting until
+  it is clicked again or Escape is pressed.
+- **`media` button** and **`mceMedia` command** (Insert video): a YouTube, Vimeo or
+  Dailymotion link goes in as the video's thumbnail linked to the video (Vimeo as a plain
+  link), not as an embedded player. The **`media_url_resolver`** option lets the host
+  supply the link, thumbnail and title; note its signature differs from TinyMCE's.
+- **`pastetext` button**, **`mceTogglePlainTextPaste` command** and **`paste_as_text`**
+  option (Paste as text): every paste inserts the clipboard's plain text only. It and
+  paste-as-Markdown turn each other off. With `isPasteAsTextEnabled()` /
+  `setPasteAsText(on)` and a `pasteplaintexttoggle` event (`{ state }`).
+- **`toolbar_expanded`** option, `isToolbarExpanded()` / `setToolbarExpanded(expanded)`
+  and a `toolbarexpandedchange` event, to start with the toolbar's More (`…`) toggle open
+  and remember the user's choice. The toggle now has `aria-expanded`, `aria-controls` and
+  an `aria-label`.
+- **Image properties.** With an image selected, the `image` button, the **`mceImage`**
+  command or a double-click on the image opens the image dialog filled in from the image,
+  and Save changes it in place in one undo step.
+- **Image dialog tabs:** General (source, alt text, title, size with Constrain proportions
+  and Reset size, alignment, preview), Link, Upload (uploads at once, with progress) and
+  Advanced (style, spacing, border, text direction, language). Configured with TinyMCE's
+  `image_advtab`, `image_title`, `image_dimensions`, `image_description`,
+  `image_uploadtab` and `a11y_advanced_options` (an **Image is decorative** checkbox).
+- **Images keep their float, margins, border, `dir` and `lang`**, and the older `align`,
+  `hspace`, `vspace` and `border` attributes are read into that style.
+- Translation keys for the new buttons and dialogs, translated in every locale.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.20.0` (from `^1.19.0`). `@tiptap/react` stays at
+  `^3.32.0` &mdash; 1.20.0 does not move TipTap.
+- Version bumped to 1.20.0 to match `@mdaemon/html-editor`.
+- README: documented the new toolbar buttons and options, paste as text, Show blocks,
+  Insert video, the image dialog's tabs, toolbar rows, and saving the user's toolbar
+  choices.
+- Inherited from html-editor 1.20.0: **the image dialog has General, Link, Upload and
+  Advanced tabs** in place of Upload and URL. Its classes are now `md-image-dialog-*`
+  instead of `md-image-upload-*`, so style overrides for it need the new names.
+- Inherited from html-editor 1.20.0: **an image inserted without alt text has no `alt`
+  attribute** (it got `alt=""`, which marks an image as decorative).
+- Inherited from html-editor 1.20.0: **a mention reads as `@Name` in plain text** from
+  `getText()`; it was left out before.
+- Inherited from html-editor 1.20.0: **`||` in a toolbar string starts a new row**, which
+  the More toggle shows and hides. It was treated as `|` before.
+
+### Fixed
+
+Inherited from the underlying `@mdaemon/html-editor` 1.20.0 upgrade:
+
+- **Cells pasted from a spreadsheet go in once**, instead of as a table and again as an
+  image.
+- **Cells pasted from Excel keep their formatting** (fills, borders, alignment, fonts,
+  colors), which Excel puts in class rules the editor used to drop. A cell keeps a
+  different border on each side.
+- **An image copied or dragged from a web page goes in once**, instead of as both an
+  `<img>` and an upload.
+- **A read-only editor takes no pasted or dropped image.**
+- **A custom toolbar button with a `text` label is as wide as its label** instead of
+  wrapping in a fixed square.
+- **The `image` button is left out of the basic editor**, which has no images.
+- **Preview shows right-to-left content right to left** with `directionality: 'rtl'`.
+- **The More toggle** keeps its state through a narrow width, shows only when the
+  toolbar takes more than one row, and the buttons it hides can no longer be reached with
+  Tab.
+- **Labels the host supplies show as text, not HTML**: a custom button's `text`, template
+  titles and descriptions, `style_formats` titles, font names and the strings a
+  `setTranslate()` function returns.
+
 ## [1.19.0] - 2026-11-10
 
 Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or

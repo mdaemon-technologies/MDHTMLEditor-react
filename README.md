@@ -19,7 +19,7 @@ npm install @mdaemon/html-editor-react
 **Peer dependencies:** `react` and `react-dom` (v18 or v19).
 
 **TipTap:** the editor is built on TipTap 3, and this package tracks the same version the
-engine uses &mdash; currently **3.32.0** (`@mdaemon/html-editor` `^1.19.0`,
+engine uses &mdash; currently **3.32.0** (`@mdaemon/html-editor` `^1.20.0`,
 `@tiptap/react` `^3.32.0`). If your app depends on any `@tiptap/*` package directly, keep
 it on that version too: ProseMirror throws at runtime if two copies of `@tiptap/core` /
 `@tiptap/pm` end up in the bundle. If you only use `<Editor>` or `useEditor`, there is
@@ -253,6 +253,8 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `toolbar_sticky` | `boolean` | `true` | Pin toolbar at top when scrolling. |
 | `toolbar_narrow_breakpoint` | `number` | &mdash; | Pixel width below which the toolbar collapses into the overflow toggle. |
 | `toolbar_priority` | `Record<string, number>` | &mdash; | Per-button overflow priority &mdash; higher values stay visible longer as the toolbar narrows. |
+| `toolbar_expanded` | `boolean` | `false` | Start with the toolbar's More (`…`) toggle open, showing every row &mdash; see [Custom Toolbar Layout](#custom-toolbar-layout). |
+| `visualblocks_default_state` | `boolean` | `false` | Start with Show blocks on (an outline and tag label around each block while editing) &mdash; see [Show Blocks](#show-blocks). |
 | `menubar` | `boolean` | `false` | Show a TinyMCE-style menu bar above the toolbar. |
 | `contextmenu` | `boolean \| string` | `''` | Right-click menu. A string naming `table` (or `true`) opens the table menu on a right-click in a table. Off by default, because it replaces the browser's menu and its spelling suggestions &mdash; see [Tables](#tables). |
 | `table_toolbar` | `string \| false` | *(TinyMCE defaults)* | Buttons of the toolbar that floats above a table while the cursor is in it, as a toolbar string. `false` turns it off. Off by default in the basic editor. |
@@ -276,6 +278,7 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `entity_encoding` | `'raw' \| 'named' \| 'numeric'` | `'raw'` | HTML entity encoding mode. |
 | `paste_from_office` | `boolean` | `true` | Clean and preserve formatting when pasting from Microsoft Word/Excel. Pasted list indentation is normalized either way &mdash; see [Lists & Indentation](#lists--indentation). |
 | `paste_markdown` | `boolean` | `false` | Start with paste-as-Markdown on, so a paste is read as Markdown and inserted as real formatting. Toggle at runtime via `getEditor()?.setPasteMarkdown()` or the `pastemarkdown` toolbar button &mdash; see [Pasting Markdown](#pasting-markdown). |
+| `paste_as_text` | `boolean` | `false` | Start with paste-as-text on, so every paste inserts the clipboard's plain text only. Wins over `paste_markdown` when both are set &mdash; see [Pasting as Plain Text](#pasting-as-plain-text). |
 | `quote_marker_class` | `string` | &mdash; | Class that marks a reply's quoted original. A `<blockquote>` or `<div>` whose class is exactly this value keeps the class and its margin, padding and border in `getContent()`, so the quote can be found again. One class name; off when unset or empty. See the [engine docs](https://github.com/mdaemon-technologies/MDHTMLEditor#quoted-original-of-a-reply). |
 | `speech_to_text` | `boolean` | `true` | Enable the `speechtotext` and `dictate` toolbar buttons (requires the Web Speech API). |
 | `convert_unsafe_embeds` | `boolean` | `true` | Sanitize embedded content. |
@@ -292,6 +295,13 @@ The `config` prop (or `useEditor`'s `config` option) accepts an `EditorConfig` o
 | `images_upload_validate` | `(file: File) => string \| null` | &mdash; | Pre-upload hook; return a message to reject the file, or `null` to allow. |
 | `images_upload_error` | `(message: string) => void` | &mdash; | Caller-supplied alert for drag-drop/paste upload rejections and failures. |
 | `images_upload_error_message` | `(response: unknown, status: number) => string \| null \| undefined` | &mdash; | Words the message for a failed upload from the server's reply (parsed JSON body, or `null`, and the HTTP status). Return `null`/`undefined` for the editor's own translated message &mdash; see [Image Upload](#image-upload). |
+| `image_advtab` | `boolean` | `false` | Show the image dialog's Advanced tab (style, spacing, border, text direction, language). |
+| `image_title` | `boolean` | `false` | Show the Title field on the image dialog's General tab (otherwise it is on the Advanced tab, when shown). |
+| `image_dimensions` | `boolean` | `true` | Show the image dialog's Width and Height fields, with Constrain proportions and Reset size. |
+| `image_description` | `boolean` | `true` | Show the image dialog's Alt text field. |
+| `image_uploadtab` | `boolean` | `true` | Show the image dialog's Upload tab. |
+| `a11y_advanced_options` | `boolean` | `false` | Add an **Image is decorative** checkbox to the image dialog, which saves `alt=""`. |
+| `media_url_resolver` | `(video: MediaVideo) => MediaResolution \| null \| Promise<...>` | &mdash; | Supplies the link, thumbnail and title the Insert video dialog inserts &mdash; see [Inserting Videos](#inserting-videos). |
 | `setup` | `(editor) => void` | &mdash; | Pre-init callback for registering custom toolbar buttons. |
 
 The table dialogs and pickers have further options (`table_appearance_options`, `table_advtab`, `table_row_advtab`, `table_cell_advtab`, `table_border_widths`, `table_border_styles`, `table_background_color_map`, `table_border_color_map`) &mdash; see the [engine docs](https://github.com/mdaemon-technologies/MDHTMLEditor#tables).
@@ -557,6 +567,36 @@ A few things worth knowing:
   single paragraph, heading, list item or table cell over 5,000 characters, or a parse that
   takes longer than 750 ms is abandoned and the text goes in as an ordinary paste instead.
 
+## Pasting as Plain Text
+
+**Paste as text** mode, as in TinyMCE, makes every paste (Ctrl/Cmd+V and the `paste`
+button) insert the clipboard's plain text with none of its formatting, links or images.
+Two line breaks start a new paragraph and one becomes a line break; the text takes the
+formatting at the cursor, as typed text would. Nothing in it is turned into formatting:
+Markdown, HTML and URLs stay literal.
+
+It is off by default. Turn it on with `paste_as_text`, the `pastetext` toolbar button (not
+in any default toolbar), or through the raw editor instance:
+
+```tsx
+<Editor config={{ paste_as_text: true, toolbar: 'bold italic | paste pastetext | undo redo' }} />
+
+// At runtime
+editorRef.current?.getEditor()?.setPasteAsText(true);
+const on = editorRef.current?.getEditor()?.isPasteAsTextEnabled();
+editorRef.current?.getEditor()?.execCommand('mceTogglePlainTextPaste');
+```
+
+Paste as text and [paste as Markdown](#pasting-markdown) exclude each other: turning one on
+turns the other off, and each fires its own event. To remember the choice, listen for
+`pasteplaintexttoggle` and pass the saved value back as `paste_as_text`:
+
+```tsx
+onInit={(editor) => {
+  editor.on('pasteplaintexttoggle', ({ state }) => savePreference(state));
+}}
+```
+
 ## Templates
 
 Enable the template dropdown and provide a `templates` array:
@@ -617,6 +657,9 @@ carries:
 
 `<blockquote>`, list items, table cells and the signature container keep their structure.
 
+A template's `title` and `description` are shown as text, not HTML, so a title such as
+`Q&A <draft>` shows as written.
+
 ## Custom Toolbar Buttons
 
 Register custom buttons via the `setup` callback in `config`, and SVG icons for them with
@@ -652,7 +695,7 @@ Register custom buttons via the `setup` callback in `config`, and SVG icons for 
 | Option | Type | Description |
 |--------|------|-------------|
 | `tooltip` | `string` | Hover text. |
-| `text` | `string` | Button label. |
+| `text` | `string` | Button label, shown as text. A button with `text` and no icon is as wide as its label. |
 | `icon` | `string` | Icon shown instead of text: a name registered with `addIcon`, a built-in toolbar icon name such as `'link'`, SVG markup, or an image URL (see [Icons](#icons)). |
 | `disabled` | `boolean` | Initial disabled state. |
 | `onSetup` | `(api) => void \| (() => void)` | Called on creation; may return a teardown function. |
@@ -672,8 +715,9 @@ colors in every skin, so use a URL only for icons with fixed colors, such as a l
 
 Icon markup is cleaned before it is drawn: only the `<svg>` and its drawing elements are
 kept, and script, event-handler attributes, links, animations and `<foreignObject>` are
-removed, so an icon can't run script. A button's `text` is inserted as HTML **without**
-cleaning &mdash; build it only from your own strings, never from user input.
+removed, so an icon can't run script. A button's `text` (like a tooltip, template titles,
+`style_formats` titles and font names) is set as text, not HTML, so markup in it shows as
+written instead of becoming part of the page.
 
 ### Button API
 
@@ -688,7 +732,7 @@ The `api` object passed to `onSetup` and `onAction`:
 
 ## Custom Toolbar Layout
 
-Provide a `toolbar` string to control which buttons appear and in what order. Use `|` to group buttons and `||` to create a collapsible overflow section:
+Provide a `toolbar` string to control which buttons appear and in what order. Use `|` to group buttons and `||` to start a new row:
 
 ```tsx
 <Editor
@@ -698,7 +742,14 @@ Provide a `toolbar` string to control which buttons appear and in what order. Us
 />
 ```
 
-Buttons after `||` begin collapsed behind a toggle (`...`) button.
+The first row holds what comes before the first `||`, whatever the editor's width. The rows
+after it are hidden behind the More (`…`) toggle, which shows only when the buttons take
+more than one row. Where the toolbar is one line (narrow mode, which scrolls, and the table
+toolbar) `||` shows as a separator. Empty rows and a `||` at either end are ignored.
+
+Start with the toggle open with `toolbar_expanded: true`, or open and close it at runtime
+with `getEditor()?.setToolbarExpanded(expanded)` (`isToolbarExpanded()` reads it). To
+remember the user's choice, see [Saving the User's Toolbar Choices](#saving-the-users-toolbar-choices).
 
 ### Available Toolbar Buttons
 
@@ -730,11 +781,15 @@ Buttons after `||` begin collapsed behind a toggle (`...`) button.
 | `removeformat` | Strip all formatting |
 | `copy` | Copy selection |
 | `cut` | Cut selection |
-| `paste` | Paste from clipboard (follows the paste-as-Markdown mode) |
+| `paste` | Paste from clipboard (follows the paste-as-Markdown and paste-as-text modes) |
 | `pastemarkdown` | Toggle paste-as-Markdown mode &mdash; not in any default toolbar (see [Pasting Markdown](#pasting-markdown)) |
+| `pastetext` | Toggle paste-as-text mode &mdash; not in any default toolbar (see [Pasting as Plain Text](#pasting-as-plain-text)) |
+| `selectall` | Select the whole document, as Ctrl+A does &mdash; not in any default toolbar |
+| `formatpainter` | Format Painter: copy the inline formatting at the selection and paint it onto the next selection; double-click to keep painting until clicked again or Escape &mdash; not in any default toolbar |
 | `undo` | Undo |
 | `redo` | Redo |
-| `image` | Insert image (upload or URL) |
+| `image` | Insert image, or edit the selected image's properties (see [Image Dialog](#image-dialog)). Not in the basic editor |
+| `media` | Insert video: a YouTube, Vimeo or Dailymotion link goes in as a linked thumbnail &mdash; not in any default toolbar or the basic editor (see [Inserting Videos](#inserting-videos)) |
 | `table` | Table menu: Insert table size grid, Cell / Row / Column submenus, Table properties, caption and Delete table (see [Tables](#tables)) |
 | `tableinsertdialog`, `tableprops`, `tabledelete`, `tablecellprops`, `tablerowprops`, `tablemergecells`, `tablesplitcells` | Insert table dialog, properties dialogs, delete table, merge and split cells |
 | `tableinsertrowbefore`, `tableinsertrowafter`, `tabledeleterow`, `tableinsertcolbefore`, `tableinsertcolafter`, `tabledeletecol` | Insert and delete rows and columns |
@@ -751,15 +806,51 @@ Buttons after `||` begin collapsed behind a toggle (`...`) button.
 | `codesample` | Toggle code sample on the lines the selection touches (lines split by Shift+Enter outside the selection stay text) |
 | `fullscreen` | Toggle fullscreen |
 | `preview` | Preview in new window (the window carries a Content Security Policy that blocks script) |
+| `print` | Print the content on its own, without the page around it; also makes Ctrl/Cmd+P in the editor print the content &mdash; not in any default toolbar |
+| `visualblocks` | Toggle Show blocks &mdash; not in any default toolbar (see [Show Blocks](#show-blocks)) |
 | `searchreplace` | Find & Replace dialog |
 | `speechtotext` | Open Speech to Text dialog (requires `speech_to_text` + browser support) |
 | `dictate` | Toggle inline dictation &mdash; inserts speech at the cursor (requires `speech_to_text` + browser support) |
 | `ltr` | Left-to-right direction |
 | `rtl` | Right-to-left direction |
 
+### Show Blocks
+
+The `visualblocks` button (or the `mceVisualBlocks` command) turns on and off a dashed
+outline around each block, labelled with its tag (`P`, `DIV`, `H1`&ndash;`H6`,
+`BLOCKQUOTE`, `UL`, `OL`, `PRE`, `TABLE`), so the user can see how the content is
+structured. It only changes how the editor shows the content: `getContent()` is the same
+with it on or off, and it doesn't mark the editor dirty. Start with it on with
+`visualblocks_default_state: true`, or use `getEditor()?.setVisualBlocks(on)` and
+`isVisualBlocksEnabled()`. The colors come from the `--md-visualblocks-color` and
+`--md-visualblocks-label-color` custom properties.
+
+### Saving the User's Toolbar Choices
+
+Show blocks, the More toggle, paste as text and paste as Markdown each fire an event when
+the user changes them, and only on a change. Save the value and pass it back in `config`
+next time:
+
+```tsx
+<Editor
+  config={{
+    toolbar: 'bold italic | visualblocks pastetext || forecolor backcolor',
+    visualblocks_default_state: prefs.visualBlocks,
+    toolbar_expanded: prefs.toolbarExpanded,
+    paste_as_text: prefs.pasteAsText,
+  }}
+  onInit={(editor) => {
+    editor.on('visualblocks', ({ state }) => savePref('visualBlocks', state));
+    editor.on('toolbarexpandedchange', (expanded) => savePref('toolbarExpanded', expanded));
+    editor.on('pasteplaintexttoggle', ({ state }) => savePref('pasteAsText', state));
+  }}
+/>
+```
+
 ## Image Upload
 
-The image toolbar button opens a dialog supporting drag-and-drop upload or direct URL entry. Supported formats: JPEG, PNG, GIF, WebP, SVG.
+The `image` toolbar button opens the image dialog &mdash; see [Image Dialog](#image-dialog).
+Supported formats: JPEG, PNG, GIF, WebP, SVG.
 
 When `images_upload_url` is configured, files are posted as `multipart/form-data`. The server must return JSON with a `location`, `url`, or `link` field. Without an upload URL, images are embedded as base64 data URIs.
 
@@ -795,6 +886,37 @@ Upload failures are shown in the editor's language. When your server explains a 
 />
 ```
 
+A pasted or dropped image goes in once, as the upload: an image copied from a web page, or
+spreadsheet cells (which carry a picture of themselves), no longer go in twice. A
+read-only editor takes no pasted or dropped image.
+
+### Image Dialog
+
+The `image` button, the `mceImage` command, or a double-click on an image opens the image
+dialog. With an image selected it opens as **Image properties**, filled in from the image,
+and Save changes the image in place in one undo step; otherwise it opens as **Insert
+image**. It has four tabs:
+
+- **General** &mdash; Source (an http(s) or relative address, or a `data:image` URI), Alt
+  text, Title, Width and Height (pixels or a percentage) with Constrain proportions and
+  Reset size, Alignment (None, Left, Right), and a preview.
+- **Link** &mdash; a link around the image, and whether it opens in a new window.
+- **Upload** &mdash; drop or browse for a file; it uploads at once with the editor's
+  upload settings, then fills in Source.
+- **Advanced** &mdash; Style, vertical and horizontal space, border, text direction and
+  language. Shown only with `image_advtab: true`.
+
+Which fields and tabs show is set with TinyMCE's `image_advtab`, `image_title`,
+`image_dimensions`, `image_description`, `image_uploadtab` and `a11y_advanced_options`
+(see [Configuration](#configuration)). An image inserted without alt text gets no `alt`
+attribute; `a11y_advanced_options` adds an **Image is decorative** checkbox that saves
+`alt=""`.
+
+Images keep a checked `style` limited to `float`, margins and border, plus `dir` and
+`lang`; the older `align`, `hspace`, `vspace` and `border` attributes are read into that
+style. The dialog's classes are `md-image-dialog-*` (they were `md-image-upload-*` before
+1.20.0), so update any style overrides.
+
 ### Resizing Images
 
 Click an image in the full editor to select it, and drag one of the eight handles to resize it. Corners keep the aspect ratio (hold Shift to stretch freely), sides change only the width or the height, and Escape cancels the drag. The new size is saved in the image's `width` and `height` attributes, as TinyMCE does, as one undo step that fires `onDirty` and `onChange` like any other edit. Handles are hidden in read-only mode.
@@ -820,6 +942,35 @@ Images are inline, as in TinyMCE and mail HTML: a link around an image is kept, 
 ### Image Maps
 
 In the full editor, an `<img usemap="#name">` and its `<map name="name">` with the `<area>` hotspots are kept through loading, `insertContent()`, paste and the Source view, with their values checked (an area `href` gets the same check as a link's). While editing, a map is shown as a small marker and its hotspots do nothing; they work in the saved HTML. Maps have no toolbar button &mdash; edit them in the Source view. An image with a map has no resize handles. The basic editor has no images, so it drops maps. See the [engine docs](https://github.com/mdaemon-technologies/MDHTMLEditor#image-maps) for what is kept.
+
+## Inserting Videos
+
+The `media` toolbar button (or the `mceMedia` command) opens the **Insert video** dialog.
+It takes a YouTube, Vimeo or Dailymotion link and inserts the video's thumbnail, linked to
+the video. No embedded player is inserted: the editor keeps no iframes and mail clients
+remove them, while a linked image shows everywhere. Vimeo has no thumbnail at a fixed
+address, so a Vimeo video goes in as a plain link. The button is not in any default
+toolbar, and is not available in the basic editor or a read-only editor.
+
+`media_url_resolver` lets the host supply the inserted `href`, `thumbnail` and `title` for
+each video &mdash; for example a thumbnail served from your own server, so readers' mail
+clients load no image from the video site. It may return a promise; `null`, a rejection or
+an error keeps the defaults. Its signature is **not** TinyMCE's (which returns embed HTML),
+so a TinyMCE resolver has to be rewritten.
+
+```tsx
+<Editor
+  config={{
+    toolbar: 'bold italic | link image media',
+    media_url_resolver: async ({ provider, id }) => ({
+      thumbnail: `/api/video-thumbnail?provider=${provider}&id=${encodeURIComponent(id)}`,
+    }),
+  }}
+/>
+```
+
+The `MediaVideo`, `MediaResolution` and `MediaUrlResolver` types are exported from
+`@mdaemon/html-editor`.
 
 ## Tables
 
@@ -929,6 +1080,8 @@ setGetFileSrc((path) => `https://cdn.example.com${path}`);
 | Ctrl/Cmd + Z | Undo |
 | Ctrl/Cmd + Shift + Z | Redo |
 | Ctrl/Cmd + F | Find & Replace |
+| Ctrl/Cmd + P | Print the editor's content instead of the page (only with the `print` button in the toolbar) |
+| Esc | Stop the Format Painter while it is on |
 | Ctrl + Alt + C (Cmd + Option + C on macOS) | Toggle code sample |
 | Tab | Types a tab at the cursor in a paragraph or heading ([details](#tab-characters)), indents the selected paragraphs when there is a selection, nests or indents a list item, inserts a tab in a code block, or moves to the next table cell (unless `table_tab_navigation: false`) ([details](#lists--indentation)) |
 | Shift + Tab | Decrease indent &mdash; un-nests a list item, moves to the previous table cell, or removes block indent ([details](#lists--indentation)) |
