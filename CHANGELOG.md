@@ -5,6 +5,39 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.21.0] - 2026-11-19
+
+Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or
+component behavior.
+
+### Changed
+
+- Upgraded `@mdaemon/html-editor` to `^1.21.0` (from `^1.20.0`). `@tiptap/react` stays at
+  `^3.32.0` &mdash; 1.21.0 does not move TipTap.
+- Version bumped to 1.21.0 to match `@mdaemon/html-editor`.
+- README: new [Links](README.md#links) section on which link addresses are kept and how the
+  Link dialog completes a typed address; the Pasting Markdown section no longer says links
+  are limited to TipTap's schemes.
+
+### Fixed
+
+Inherited from the underlying `@mdaemon/html-editor` 1.21.0 upgrade:
+
+- **A link to an application's own URL scheme keeps its link** (`notes:`, `outlook:`,
+  `zoommtg:`, or a dotted one such as `example.dms:`). It was turned into plain text in
+  loaded content, pasted HTML, the Source view, the Link dialog, the image dialog's Link tab
+  and image map `<area href>`. Any scheme is now allowed except `javascript:`, `vbscript:`,
+  `mhtml:`, `data:`, `file:`, `blob:` and `filesystem:`, checked after whitespace and
+  control characters are removed.
+- **The Link dialog no longer saves a refused address** such as `javascript:` or `data:`.
+  The URL field is marked and the dialog stays open until it is fixed.
+- **A host and port typed in the Link dialog or the image dialog's Link tab gets
+  `http://`** (`www.example.com:8080/page`, `localhost:3000`, `127.0.0.1:3000`), instead of
+  being refused or saved as a relative path.
+- **Saving the Link dialog without changing the URL keeps the link's address as it is**,
+  instead of a bare `example.com` gaining `http://` when only the title changed. The dialog
+  also removes control characters from a typed URL.
+
 ## [1.20.0] - 2026-11-17
 
 Dependency upgrade &mdash; no changes to this package's props, ref methods, hook API, or

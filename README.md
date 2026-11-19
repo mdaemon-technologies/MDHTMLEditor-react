@@ -19,7 +19,7 @@ npm install @mdaemon/html-editor-react
 **Peer dependencies:** `react` and `react-dom` (v18 or v19).
 
 **TipTap:** the editor is built on TipTap 3, and this package tracks the same version the
-engine uses &mdash; currently **3.32.0** (`@mdaemon/html-editor` `^1.20.0`,
+engine uses &mdash; currently **3.32.0** (`@mdaemon/html-editor` `^1.21.0`,
 `@tiptap/react` `^3.32.0`). If your app depends on any `@tiptap/*` package directly, keep
 it on that version too: ProseMirror throws at runtime if two copies of `@tiptap/core` /
 `@tiptap/pm` end up in the bundle. If you only use `<Editor>` or `useEditor`, there is
@@ -562,7 +562,8 @@ A few things worth knowing:
   either way; over a larger selection (such as Ctrl+A) it replaces the selection.
 - **Pasted Markdown cannot run script.** Raw HTML inside the Markdown is escaped to visible
   text, the converted HTML is sanitized in an inert document before it reaches ProseMirror,
-  and links are limited to the schemes TipTap allows.
+  and links get the same check as any other link (see [Links](#links)), so a `javascript:`
+  target loses its link and keeps its text.
 - Conversion runs on a budget so a crafted paste cannot freeze the tab: input over 256 KB, any
   single paragraph, heading, list item or table cell over 5,000 characters, or a parse that
   takes longer than 750 ms is abandoned and the text goes in as an ordinary paste instead.
@@ -847,6 +848,32 @@ next time:
 />
 ```
 
+## Links
+
+A link may use any URL scheme, including a desktop application's own: `notes://server/db`,
+`outlook:00000000ABC`, `zoommtg:`, or one with a dot, such as `example.dms:1|ABC`. This
+holds wherever a link comes from: the `body` / `initialValue` props, `setContent()`,
+pasted HTML, the Source view, the Link dialog, the image dialog's Link tab
+and an image map's `<area href>`. No option is needed. Only these schemes are refused:
+
+- `javascript:`, `vbscript:`, `mhtml:` and `data:`, as in TinyMCE.
+- `file:`, `blob:` and `filesystem:`, which never work for the reader of saved content.
+
+A refused link becomes plain text with its text kept. The Link dialog and the image
+dialog's Link tab won't save one: the URL field is marked and the dialog stays open until
+it is fixed. The scheme is checked after whitespace and control characters are removed, so
+`java&#9;script:` is refused too. Addresses without a scheme (`#section`, `/path`,
+`page.html`) are always allowed. Clicking a link in the editor places the caret; it does
+not open the link.
+
+In the Link dialog and the image dialog's Link tab, an address typed without a scheme gets
+`http://` when it looks like a domain (`www.example.com`, `example.com/path`) or a host
+with a port (`example.com:8080/page`, `127.0.0.1:3000`, `localhost:3000`). An
+application's scheme is left as typed (`example.dms:1|ABC`, `x-example-app:12345`), but a
+dotted scheme followed by digits alone (`example.dms:12345`) can't be told from a host and
+port, so load that one through the content instead. Saving the dialog without changing the
+URL keeps the link's address as it was.
+
 ## Image Upload
 
 The `image` toolbar button opens the image dialog &mdash; see [Image Dialog](#image-dialog).
@@ -941,7 +968,7 @@ Images are inline, as in TinyMCE and mail HTML: a link around an image is kept, 
 
 ### Image Maps
 
-In the full editor, an `<img usemap="#name">` and its `<map name="name">` with the `<area>` hotspots are kept through loading, `insertContent()`, paste and the Source view, with their values checked (an area `href` gets the same check as a link's). While editing, a map is shown as a small marker and its hotspots do nothing; they work in the saved HTML. Maps have no toolbar button &mdash; edit them in the Source view. An image with a map has no resize handles. The basic editor has no images, so it drops maps. See the [engine docs](https://github.com/mdaemon-technologies/MDHTMLEditor#image-maps) for what is kept.
+In the full editor, an `<img usemap="#name">` and its `<map name="name">` with the `<area>` hotspots are kept through loading, `insertContent()`, paste and the Source view, with their values checked (an area `href` gets the same check as a link's; see [Links](#links)). While editing, a map is shown as a small marker and its hotspots do nothing; they work in the saved HTML. Maps have no toolbar button &mdash; edit them in the Source view. An image with a map has no resize handles. The basic editor has no images, so it drops maps. See the [engine docs](https://github.com/mdaemon-technologies/MDHTMLEditor#image-maps) for what is kept.
 
 ## Inserting Videos
 
